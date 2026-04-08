@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>קוצ' אישי</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#63b3ed" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="קוצ' שלי" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0c18;
+      --bg2: #131324;
+      --bg3: #1a1a2e;
+      --accent: #63b3ed;
+      --accent2: #9f7aea;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --border: rgba(99,179,237,0.15);
+      --bubble-user: linear-gradient(135deg, #2563eb, #4f46e5);
+      --bubble-ai: rgba(255,255,255,0.055);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Heebo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: calc(var(--safe-top) + 14px) 16px 14px;
+      background: rgba(12,12,24,0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    .avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(99,179,237,0.35);
+    }
+
+    .header-info { flex: 1; }
+    .header-info h1 { font-size: 16px; font-weight: 700; color: var(--text); }
+    .header-info p  { font-size: 11px; color: var(--accent); margin-top: 1px; }
+
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text2);
+      font-size: 15px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .icon-btn:hover { background: rgba(99,179,237,0.12); color: var(--accent); }
+
+    /* ── MESSAGES ── */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    #messages::-webkit-scrollbar { width: 3px; }
+    #messages::-webkit-scrollbar-thumb { background: rgba(99,179,237,0.2); border-radius: 4px; }
+
+    .msg-row {
+      display: flex;
+      animation: fadeUp .25s ease;
+    }
+    .msg-row.user { justify-content: flex-start; }
+    .msg-row.ai   { justify-content: flex-end; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .bubble {
+      max-width: 84%;
+      padding: 11px 15px;
+      font-size: 14.5px;
+      line-height: 1.65;
+      word-break: break-word;
+    }
+    .msg-row.user .bubble {
+      background: var(--bubble-user);
+      border-radius: 18px 18px 4px 18px;
+      color: #fff;
+    }
+    .msg-row.ai .bubble {
+      background: var(--bubble-ai);
+      border: 1px solid var(--border);
+      border-radius: 18px 18px 18px 4px;
+      backdrop-filter: blur(8px);
+    }
+
+    .bubble strong { color: #93c5fd; }
+    .bubble br { display: block; content: ''; margin-top: 3px; }
+
+    /* date separator */
+    .date-sep {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text2);
+      margin: 6px 0;
+      opacity: .7;
+    }
+
+    /* typing indicator */
+    .typing { display: flex; gap: 5px; align-items: center; padding: 14px 16px; }
+    .typing span {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: bounce .9s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: .15s; }
+    .typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); opacity:.5; }
+      50%      { transform: translateY(-5px); opacity:1; }
+    }
+
+    /* ── QUICK ACTIONS ── */
+    #quick-wrap {
+      padding: 8px 12px 4px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      background: rgba(12,12,24,0.7);
+      backdrop-filter: blur(10px);
+    }
+
+    #quick-wrap p { font-size: 10px; color: var(--text2); text-align: center; margin-bottom: 6px; letter-spacing: .5px; }
+
+    #quick-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    #quick-scroll::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex-shrink: 0;
+      padding: 6px 13px;
+      border-radius: 20px;
+      border: 1px solid rgba(99,179,237,0.28);
+      background: rgba(99,179,237,0.07);
+      color: #93c5fd;
+      font-size: 12px;
+      font-family: 'Heebo', sans-serif;
+      cursor: pointer;
+      transition: all .18s;
+      white-space: nowrap;
+    }
+    .chip:active { background: rgba(99,179,237,0.22); transform: scale(.96); }
+
+    /* ── INPUT ── */
+    #input-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 12px calc(var(--safe-bottom) + 10px);
+      background: rgba(12,12,24,0.92);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    #input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(99,179,237,0.2);
+      border-radius: 22px;
+      padding: 11px 16px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: 'Heebo', sans-serif;
+      resize: none;
+      outline: none;
+      line-height: 1.45;
+      max-height: 120px;
+      min-height: 44px;
+      transition: border .2s;
+      direction: rtl;
+    }
+    #input:focus { border-color: rgba(99,179,237,0.55); }
+    #input::placeholder { color: #4a5568; }
+
+    #send-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all .2s;
+      box-shadow: 0 4px 14px rgba(99,179,237,0.35);
+    }
+    #send-btn:disabled {
+      background: rgba(99,179,237,0.18);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    #send-btn:not(:disabled):active { transform: scale(.92); }
+
+    /* ── CLEAR CONFIRM ── */
+    #confirm-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    #confirm-overlay.show { display: flex; }
+    .confirm-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px 20px;
+      max-width: 300px;
+      width: 90%;
+      text-align: center;
+    }
+    .confirm-box h3 { font-size: 16px; margin-bottom: 8px; }
+    .confirm-box p  { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+    .confirm-btns { display: flex; gap: 10px; }
+    .confirm-btns button {
+      flex: 1; padding: 10px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-family: 'Heebo', sans-serif;
+      cursor: pointer;
+    }
+    .btn-cancel { background: rgba(255,255,255,0.08); color: var(--text); }
+    .btn-clear  { background: #e53e3e; color: #fff; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="avatar">💪</div>
+    <div class="header-info">
+      <h1>קוצ' אישי</h1>
+      <p>כושר &amp; תזונה • AI</p>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="clear-btn" title="נקה שיחה">🗑</button>
+    </div>
+  </header>
+
+  <div id="messages"></div>
+
+  <div id="quick-wrap">
+    <p>פעולות מהירות</p>
+    <div id="quick-scroll"></div>
+  </div>
+
+  <div id="input-bar">
+    <textarea id="input" placeholder="ספר לי על היום שלך..." rows="1"></textarea>
+    <button id="send-btn" disabled>➤</button>
+  </div>
+</div>
+
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <h3>🗑 לנקות שיחה?</h3>
+    <p>כל ההיסטוריה תימחק לצמיתות</p>
+    <div class="confirm-btns">
+      <button class="btn-cancel" id="cancel-clear">ביטול</button>
+      <button class="btn-clear"  id="confirm-clear">מחיקה</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────
+const STORAGE_KEY = 'coach_history_v2';
+const MAX_HISTORY  = 40; // messages kept in localStorage
+
+const SYSTEM = `אתה מאמן כושר ותזונאי אישי מקצועי בעברית. המשתמש מתאמן 4 פעמים בשבוע אימוני AB (כוח בלבד) ורוצה לרדת באחוזי שומן תוך שמירה על מסת שריר.
+
+מידע קבוע:
+• אימונים: 4x/שבוע, כוח בלבד, split AB
+• מטרה: ירידה באחוזי שומן (body recomposition)
+• גירעון קלורי מטרה: ~300-500 קק"ל/יום
+• חלבון מטרה: 2–2.2 גרם לק"ג משקל גוף
+
+תפקידיך:
+1. תזונאי: כשהמשתמש מספר היכן יהיה / מה יאכל / כמה רעב הוא — תן המלצות ארוחות עם קלוריות, חלבון, פחמימות, שומנים. התאם לסיטואציה (בית/מסעדה/נסיעה/יום אימון/יום מנוחה).
+2. מאמן: המלץ האם להוסיף קרדיו / HIIT / הליכות בהתאם לפעילות היומית. תן תרגילים ספציפיים אם מתאים.
+3. עקיב ומחזק: זכור את המטרה, עודד, תן מספרים קונקרטיים.
+
+חוקים:
+• ענה תמיד בעברית
+• השתמש ב-**bold** להדגשות חשובות
+• תמיד כלול מספרים (קלוריות, גרמים)
+• אם חסר מידע — שאל שאלה אחת ממוקדת
+• היה ידידותי, מעשי, קצר וברור`;
+
+const QUICK_ACTIONS = [
+  { label: '🏠 יום בבית',       prompt: 'אני היום בבית, יש לי אימון. מה לאכול?' },
+  { label: '🏢 יום עבודה',      prompt: 'יום עבודה משרדי, אין אימון היום. מה לאכול?' },
+  { label: '✈️ יוצא מהבית',    prompt: 'אני בחוץ כל היום, צריך לאכול בחוץ. מה מומלץ?' },
+  { label: '💪 לפני אימון',     prompt: 'אימון בעוד שעה. מה לאכול לפני?' },
+  { label: '🍽️ אחרי אימון',    prompt: 'סיימתי אימון. מה לאכול עכשיו?' },
+  { label: '😴 יום מנוחה',      prompt: 'יום מנוחה מלא. כמה קלוריות לאכול ומה?' },
+  { label: '📊 תוכנית שבועית', prompt: 'תבנה לי תוכנית שבועית לאימונים ותזונה לירידה בשומן' },
+  { label: '➕ להוסיף אימונים?',prompt: 'האם כדאי לי להוסיף עוד אימונים לצד 4 האימונים שלי?' },
+  { label: '⚖️ חישוב קלוריות', prompt: 'עזור לי לחשב כמה קלוריות אני צריך לאכול ביום' },
+  { label: '🌙 ארוחת ערב',      prompt: 'מה לאכול לארוחת ערב שתתמוך בירידה בשומן?' },
+];
+
+// ── State ──────────────────────────────────────────────────
+let history = [];   // [{role, content, ts}]
+let loading  = false;
+
+// ── DOM ───────────────────────────────────────────────────
+const messagesEl = document.getElementById('messages');
+const inputEl    = document.getElementById('input');
+const sendBtn    = document.getElementById('send-btn');
+
+// ── Storage ───────────────────────────────────────────────
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) history = JSON.parse(raw);
+  } catch { history = []; }
+}
+
+function saveHistory() {
+  const trimmed = history.slice(-MAX_HISTORY);
+  history = trimmed;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+}
+
+// ── Render ────────────────────────────────────────────────
+function formatText(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+function dateLabel(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 86400000 && now.getDate() === d.getDate()) return 'היום';
+  if (diff < 172800000) return 'אתמול';
+  return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
+}
+
+function renderAll() {
+  messagesEl.innerHTML = '';
+  let lastDate = '';
+
+  history.forEach(msg => {
+    const label = dateLabel(msg.ts || Date.now());
+    if (label !== lastDate) {
+      const sep = document.createElement('div');
+      sep.className = 'date-sep';
+      sep.textContent = label;
+      messagesEl.appendChild(sep);
+      lastDate = label;
+    }
+    appendBubble(msg.role, msg.content, false);
+  });
+
+  if (history.length === 0) {
+    appendBubble('assistant', 'שלום! אני הקוצ\' שלך 💪\n\nאני כאן כדי לעזור לך לרדת בשומן חכם — **תזונה מותאמת ליום שלך** + **המלצות אימון**.\n\nספר לי **היכן אתה היום** ומה מחכה לך, ואני אבנה לך תפריט + תוכנית מותאמת אישית!', false);
+  }
+
+  scrollBottom();
+}
+
+function appendBubble(role, content, animate = true) {
+  const row = document.createElement('div');
+  row.className = `msg-row ${role === 'user' ? 'user' : 'ai'}`;
+  if (!animate) row.style.animation = 'none';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = formatText(content);
+
+  row.appendChild(bubble);
+  messagesEl.appendChild(row);
+  return row;
+}
+
+function showTyping() {
+  const row = document.createElement('div');
+  row.className = 'msg-row ai';
+  row.id = 'typing-row';
+  row.innerHTML = `<div class="bubble typing"><span></span><span></span><span></span></div>`;
+  messagesEl.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+function scrollBottom() {
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// ── Quick Actions ─────────────────────────────────────────
+function buildQuickActions() {
+  const scroll = document.getElementById('quick-scroll');
+  QUICK_ACTIONS.forEach(a => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = a.label;
+    chip.addEventListener('click', () => send(a.prompt));
+    scroll.appendChild(chip);
+  });
+}
+
+// ── Send ──────────────────────────────────────────────────
+async function send(text) {
+  const msg = (text || inputEl.value).trim();
+  if (!msg || loading) return;
+
+  inputEl.value = '';
+  autoResize();
+  setLoading(true);
+
+  const ts = Date.now();
+  history.push({ role: 'user', content: msg, ts });
+  saveHistory();
+  appendBubble('user', msg);
+  scrollBottom();
+
+  const typingRow = showTyping();
+
+  try {
+    const apiMessages = history
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => ({ role: m.role, content: m.content }));
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages: apiMessages,
+      }),
+    });
+
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'שגיאה בקבלת תשובה.';
+
+    typingRow.remove();
+    history.push({ role: 'assistant', content: reply, ts: Date.now() });
+    saveHistory();
+    appendBubble('assistant', reply);
+    scrollBottom();
+  } catch (err) {
+    typingRow.remove();
+    appendBubble('assistant', '❌ שגיאה בחיבור. בדוק אינטרנט ונסה שוב.');
+    scrollBottom();
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(val) {
+  loading = val;
+  sendBtn.disabled = val || !inputEl.value.trim();
+  inputEl.disabled = val;
+}
+
+// ── Input helpers ─────────────────────────────────────────
+function autoResize() {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+}
+
+inputEl.addEventListener('input', () => {
+  autoResize();
+  sendBtn.disabled = loading || !inputEl.value.trim();
+});
+
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+});
+
+sendBtn.addEventListener('click', () => send());
+
+// ── Clear ─────────────────────────────────────────────────
+document.getElementById('clear-btn').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.add('show');
+});
+document.getElementById('cancel-clear').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.remove('show');
+});
+document.getElementById('confirm-clear').addEventListener('click', () => {
+  history = [];
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('confirm-overlay').classList.remove('show');
+  renderAll();
+});
+
+// ── Service Worker ────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// ── Init ──────────────────────────────────────────────────
+loadHistory();
+renderAll();
+buildQuickActions();
+</script>
+</body>
+</html>
