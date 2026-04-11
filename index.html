@@ -595,7 +595,11 @@ function buildSystemPrompt() {
 2. מאמן: המלץ על קרדיו/HIIT/הליכות בהתאם ליום.
 3. מחזק: עקוב אחר ההתקדמות, עודד, שמח על שינויים חיוביים.
 
-חוקים: ענה בעברית, השתמש ב-**bold**, תמיד כלול מספרים, היה קצר וברור.`;
+חוקים: ענה בעברית, השתמש ב-**bold**, תמיד כלול מספרים, היה קצר וברור.
+
+כשאתה בונה תפריט יומי — תמיד כלול ארוחת בוקר, צהריים, ערב וחטיפים עם קלוריות. המערכת תשמור אותו אוטומטית.
+כשהמשתמש מעדכן מה אכל בפועל — אשר שקיבלת ונתח בקצרה.
+כשמישהו שואל על תפריט יום קודם — שלוף מהיומן הקיים בסיסטם.`;
 
   return base;
 }
@@ -782,6 +786,83 @@ function renderWeighinHistory() {
   }).join('');
 }
 
+// ══════ AUTO MENU DETECTION ══════
+const MENU_KEYWORDS_PLANNED = ['ארוחת בוקר','ארוחת צהריים','ארוחת ערב','חטיף','תפריט','לאכול','קלוריות','גרם','חלבון'];
+const ACTUAL_KEYWORDS = ['אכלתי','אכלנו','בסוף אכלתי','בפועל','הייתי','שינוי','אכלת'];
+const CONFIRM_KEYWORDS = ['אוקיי','בסדר','מסכים','מאשר','טוב','יאללה','נשמע טוב','מעולה','קבוע','סגור','נסגר'];
+
+function looksLikePlannedMenu(coachReply) {
+  const lower = coachReply.toLowerCase();
+  let score = 0;
+  MENU_KEYWORDS_PLANNED.forEach(k => { if (coachReply.includes(k)) score++; });
+  if (coachReply.includes('קק"ל') || coachReply.includes('קלוריות')) score += 2;
+  if (coachReply.includes('ארוחת בוקר') && coachReply.includes('ארוחת צהריים')) score += 3;
+  return score >= 3;
+}
+
+function looksLikeUserConfirmed(userMsg) {
+  return CONFIRM_KEYWORDS.some(k => userMsg.includes(k));
+}
+
+function looksLikeActualReport(userMsg) {
+  return ACTUAL_KEYWORDS.some(k => userMsg.includes(k));
+}
+
+function inferDayType(text) {
+  if (text.includes('אימון') && (text.includes('בית') || text.includes('בבית'))) return 'בית + אימון';
+  if (text.includes('אימון') && text.includes('עבודה')) return 'עבודה + אימון';
+  if (text.includes('עבודה')) return 'עבודה';
+  if (text.includes('מנוחה')) return 'מנוחה';
+  if (text.includes('חוץ') || text.includes('בחוץ')) return 'חוץ';
+  if (text.includes('אימון')) return 'אימון';
+  return 'כללי';
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('auto-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'auto-toast';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(72,187,120,0.95);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;z-index:999;transition:opacity .4s;white-space:nowrap;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  setTimeout(() => toast.style.opacity = '0', 3000);
+}
+
+async function autoDetectAndSave(userMsg, coachReply) {
+  const entry = getTodayEntry();
+
+  // Case 1: Coach replied with a full menu plan → save as planned
+  if (!entry.planned && looksLikePlannedMenu(coachReply)) {
+    entry.dayType = inferDayType(userMsg + ' ' + coachReply);
+    entry.planned = coachReply;
+    saveMenuLog();
+    showToast('📋 תפריט היום נשמר אוטומטית!');
+    return;
+  }
+
+  // Case 2: User confirmed a menu the coach proposed → save previous coach msg as planned
+  if (!entry.planned && looksLikeUserConfirmed(userMsg)) {
+    const prevCoach = chatHistory.filter(m => m.role === 'assistant').slice(-2, -1)[0];
+    if (prevCoach && looksLikePlannedMenu(prevCoach.content)) {
+      entry.dayType = inferDayType(prevCoach.content);
+      entry.planned = prevCoach.content;
+      saveMenuLog();
+      showToast('📋 תפריט נשמר אוטומטית!');
+    }
+    return;
+  }
+
+  // Case 3: User reported what they actually ate
+  if (looksLikeActualReport(userMsg) && userMsg.length > 20) {
+    entry.actual = (entry.actual ? entry.actual + '\n' : '') + userMsg;
+    saveMenuLog();
+    showToast('✅ דיווח בפועל נשמר!');
+  }
+}
+
 // ══════ CHAT ══════
 const messagesEl = document.getElementById('messages');
 const inputEl    = document.getElementById('input');
@@ -870,6 +951,9 @@ async function send(text) {
     saveHistory();
     appendBubble('assistant', reply);
     scrollBottom();
+
+    // ── AUTO DETECT & SAVE MENU ──
+    autoDetectAndSave(msg, reply);
   } catch {
     typingRow.remove();
     appendBubble('assistant', '❌ שגיאה בחיבור. בדוק אינטרנט ונסה שוב.');
