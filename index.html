@@ -760,32 +760,90 @@ document.getElementById('wi-save-btn').addEventListener('click', async () => {
 function renderWeighinHistory() {
   const container = document.getElementById('weighin-history');
   if (weighins.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="big-emoji">⚖️</div>עוד אין שקילות<br>הכנס את הנתון הראשון מ-Renpho</div>';
+    container.innerHTML = '<div class="empty-state"><div class="big-emoji">⚖️</div>עוד אין שקילות<br>העלה צילום מסך מ-Renpho</div>';
     return;
   }
+
+  const LABELS = {
+    weight:       { label: 'משקל',           unit: 'ק"ג', icon: '⚖️' },
+    fat:          { label: '% שומן',          unit: '%',   icon: '🔴' },
+    muscle:       { label: '% שריר',          unit: '%',   icon: '💪' },
+    bmi:          { label: 'BMI',             unit: '',    icon: '📊' },
+    bmr:          { label: 'BMR',             unit: 'קק"ל',icon: '🔥' },
+    visceralFat:  { label: 'שומן קרביים',    unit: '',    icon: '🫀' },
+    waterPercent: { label: '% מים',           unit: '%',   icon: '💧' },
+    boneMass:     { label: 'מסת עצם',         unit: 'ק"ג', icon: '🦴' },
+  };
+
   const sorted = [...weighins].reverse();
   container.innerHTML = sorted.map((w, i) => {
     const prev = sorted[i + 1];
     let deltaHtml = '';
-    if (prev) {
+    if (prev && prev.weight) {
       const d = (w.weight - prev.weight).toFixed(1);
       const cls = d < 0 ? 'delta-down' : d > 0 ? 'delta-up' : 'delta-same';
       const arrow = d < 0 ? '↓' : d > 0 ? '↑' : '→';
       deltaHtml = `<div class="hi-delta ${cls}">${arrow} ${Math.abs(d)} ק"ג</div>`;
     }
-    const extras = [w.fat ? `שומן ${w.fat}%` : '', w.muscle ? `שריר ${w.muscle}%` : ''].filter(Boolean).join(' • ');
+
+    const idx = sorted.length - 1 - i;
+    const dateStr = new Date(w.date).toLocaleDateString('he-IL', {day:'numeric', month:'long', year:'numeric'});
+
+    // All Renpho fields
+    const allFields = Object.entries(LABELS)
+      .filter(([k]) => w[k] != null && k !== 'weight')
+      .map(([k, meta]) => `
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <span style="color:var(--text2);font-size:13px">${meta.icon} ${meta.label}</span>
+          <span style="font-weight:600;font-size:13px">${w[k]}${meta.unit}</span>
+        </div>`).join('');
+
     return `
-      <div class="history-item">
-        <div>
-          <div class="hi-date">${new Date(w.date).toLocaleDateString('he-IL', {day:'numeric',month:'long',year:'numeric'})}</div>
-          ${extras ? `<div class="hi-extras">${extras}</div>` : ''}
+      <div style="border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;background:rgba(255,255,255,0.03);">
+        <div onclick="toggleWeighin(${idx})" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;">
+          <div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:3px">${dateStr}</div>
+            <div style="font-size:11px;color:var(--text2)">${[w.fat?`שומן ${w.fat}%`:'', w.muscle?`שריר ${w.muscle}%`:''].filter(Boolean).join(' • ')}</div>
+          </div>
+          <div style="text-align:center;display:flex;align-items:center;gap:12px">
+            <div>
+              <div class="hi-weight">${w.weight} ק"ג</div>
+              ${deltaHtml}
+            </div>
+            <span id="arrow-${idx}" style="color:var(--text2);font-size:18px;transition:transform .2s">›</span>
+          </div>
         </div>
-        <div style="text-align:center">
-          <div class="hi-weight">${w.weight} ק"ג</div>
-          ${deltaHtml}
+        <div id="weighin-details-${idx}" style="display:none;padding:0 16px 14px;border-top:1px solid var(--border);">
+          <div style="margin-top:10px">
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span style="color:var(--text2);font-size:13px">⚖️ משקל</span>
+              <span style="font-weight:700;font-size:15px;color:var(--accent)">${w.weight} ק"ג</span>
+            </div>
+            ${allFields || '<div style="color:var(--text2);font-size:12px;padding:8px 0;text-align:center">אין נתונים נוספים לשקילה זו</div>'}
+          </div>
+          <button onclick="analyzeWeighin(${idx})" style="margin-top:12px;width:100%;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:13px;font-family:Heebo,sans-serif;cursor:pointer;">🤖 נתח שקילה זו</button>
         </div>
       </div>`;
   }).join('');
+}
+
+function toggleWeighin(idx) {
+  const details = document.getElementById(`weighin-details-${idx}`);
+  const arrow   = document.getElementById(`arrow-${idx}`);
+  const isOpen  = details.style.display !== 'none';
+  details.style.display = isOpen ? 'none' : 'block';
+  arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+function analyzeWeighin(idx) {
+  const sorted = [...weighins].reverse();
+  const w = sorted[idx];
+  if (!w) return;
+  const LABELS = { weight:'משקל', fat:'% שומן', muscle:'% שריר', bmi:'BMI', bmr:'BMR', visceralFat:'שומן קרביים', waterPercent:'% מים', boneMass:'מסת עצם' };
+  const summary = Object.entries(LABELS).filter(([k]) => w[k] != null).map(([k, l]) => `${l}: ${w[k]}`).join(', ');
+  const prompt = `נתח את נתוני השקילה שלי מתאריך ${new Date(w.date).toLocaleDateString('he-IL')}: ${summary}. האם אני בכיוון הנכון? מה לשפר?`;
+  showScreen('chat');
+  send(prompt);
 }
 
 // ══════ RENPHO SCREENSHOT ══════
