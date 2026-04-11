@@ -227,6 +227,8 @@
   </div>
 
   <div id="input-bar">
+    <input type="file" id="img-input" accept="image/*" capture="environment" style="display:none" />
+    <button id="img-btn" title="שלח תמונה" style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📷</button>
     <textarea id="input" placeholder="ספר לי על היום שלך..." rows="1"></textarea>
     <button id="send-btn" disabled>➤</button>
   </div>
@@ -976,7 +978,74 @@ inputEl.addEventListener('input', () => { autoResize(); sendBtn.disabled = loadi
 inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
 sendBtn.addEventListener('click', () => send());
 
-// ── Quick Actions ──
+// ══════ IMAGE UPLOAD ══════
+document.getElementById('img-btn').addEventListener('click', () => {
+  document.getElementById('img-input').click();
+});
+
+document.getElementById('img-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const base64 = ev.target.result.split(',')[1];
+    const mimeType = file.type || 'image/jpeg';
+    const caption = inputEl.value.trim() || 'נתח את התמונה הזו בהקשר של הכושר והתזונה שלי.';
+    inputEl.value = ''; autoResize();
+
+    // Show image preview in chat
+    const row = document.createElement('div');
+    row.className = 'msg-row user';
+    row.innerHTML = `<div class="bubble" style="padding:6px"><img src="data:${mimeType};base64,${base64}" style="max-width:100%;border-radius:10px;display:block;margin-bottom:6px" /><span style="font-size:13px">${caption}</span></div>`;
+    messagesEl.appendChild(row);
+    scrollBottom();
+
+    setLoading(true);
+    const typingRow = showTyping();
+
+    try {
+      const res = await fetch('https://coach-proxy.lapushnianeran.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: buildSystemPrompt(),
+          messages: [
+            ...chatHistory.filter(m => m.role === 'user' || m.role === 'assistant').slice(-10).map(m => ({ role: m.role, content: m.content })),
+            {
+              role: 'user',
+              content: [
+                { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+                { type: 'text', text: caption }
+              ]
+            }
+          ]
+        })
+      });
+      const data = await res.json();
+      const reply = data.content?.[0]?.text || 'שגיאה בקבלת תשובה.';
+      typingRow.remove();
+      chatHistory.push({ role: 'user', content: `[תמונה] ${caption}`, ts: Date.now() });
+      chatHistory.push({ role: 'assistant', content: reply, ts: Date.now() });
+      saveHistory();
+      appendBubble('assistant', reply);
+      scrollBottom();
+      autoDetectAndSave(caption, reply);
+    } catch {
+      typingRow.remove();
+      appendBubble('assistant', '❌ שגיאה בשליחת התמונה.');
+      scrollBottom();
+    } finally {
+      setLoading(false);
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+// ══════ END IMAGE UPLOAD ══════
 (function buildQuick() {
   const scroll = document.getElementById('quick-scroll');
   QUICK_ACTIONS.forEach(a => {
