@@ -237,7 +237,7 @@
       <span class="nav-icon">💬</span>צ'אט
     </button>
     <button class="nav-btn" data-screen="menulog">
-      <span class="nav-icon">📋</span>יומן
+      <span class="nav-icon">📅</span>היסטוריה
     </button>
     <button class="nav-btn" data-screen="weighin">
       <span class="nav-icon">⚖️</span>שקילה
@@ -259,19 +259,35 @@
   </header>
 
   <div class="weighin-body">
+    <!-- Renpho screenshot upload -->
+    <div class="card">
+      <h3>📸 העלה צילום מסך מ-Renpho</h3>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">הקוצ' יקרא את כל המדדים אוטומטית ויעדכן את הפרופיל שלך</p>
+      <input type="file" id="renpho-input" accept="image/*" style="display:none" />
+      <input type="file" id="renpho-camera" accept="image/*" capture="environment" style="display:none" />
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button id="renpho-gallery-btn" class="btn-primary" style="flex:1;background:linear-gradient(135deg,#48bb78,#38a169)">🖼️ מהגלריה</button>
+        <button id="renpho-camera-btn" class="btn-primary" style="flex:1">📷 צלם עכשיו</button>
+      </div>
+      <div id="renpho-preview" style="display:none;margin-bottom:10px">
+        <img id="renpho-img" style="width:100%;border-radius:10px;max-height:200px;object-fit:contain" />
+      </div>
+      <div id="renpho-status" style="font-size:13px;color:var(--accent);text-align:center;min-height:20px"></div>
+    </div>
+
     <div class="weigh-entry-form card">
-      <h3>📥 עדכון נתונים חדשים</h3>
+      <h3>📥 עדכון ידני</h3>
       <div class="big-input-wrap">
         <input class="big-input" id="wi-weight" type="number" step="0.1" placeholder="75.0" inputmode="decimal" />
         <span class="unit-lbl">ק"ג</span>
       </div>
       <div class="optional-fields">
         <div class="opt-field">
-          <label>% שומן (אופציונלי)</label>
+          <label>% שומן</label>
           <input id="wi-fat" type="number" step="0.1" placeholder="—" inputmode="decimal" />
         </div>
         <div class="opt-field">
-          <label>% שריר (אופציונלי)</label>
+          <label>% שריר</label>
           <input id="wi-muscle" type="number" step="0.1" placeholder="—" inputmode="decimal" />
         </div>
       </div>
@@ -286,7 +302,7 @@
 
   <nav id="bottom-nav-2" class="bottom-nav-clone">
     <button class="nav-btn" data-screen="chat"><span class="nav-icon">💬</span>צ'אט</button>
-    <button class="nav-btn" data-screen="menulog"><span class="nav-icon">📋</span>יומן</button>
+    <button class="nav-btn" data-screen="menulog"><span class="nav-icon">📅</span>היסטוריה</button>
     <button class="nav-btn active" data-screen="weighin"><span class="nav-icon">⚖️</span>שקילה</button>
     <button class="nav-btn" data-screen="profile"><span class="nav-icon">👤</span>פרופיל</button>
   </nav>
@@ -338,84 +354,69 @@
 
   <nav id="bottom-nav-3" class="bottom-nav-clone">
     <button class="nav-btn" data-screen="chat"><span class="nav-icon">💬</span>צ'אט</button>
-    <button class="nav-btn" data-screen="menulog"><span class="nav-icon">📋</span>יומן</button>
+    <button class="nav-btn" data-screen="menulog"><span class="nav-icon">📅</span>היסטוריה</button>
     <button class="nav-btn" data-screen="weighin"><span class="nav-icon">⚖️</span>שקילה</button>
     <button class="nav-btn active" data-screen="profile"><span class="nav-icon">👤</span>פרופיל</button>
   </nav>
 </div>
 
-<!-- ══════════════ MENU LOG SCREEN ══════════════ -->
+<!-- ══════════════ HISTORY SCREEN ══════════════ -->
 <div id="menulog-screen" class="screen">
   <header>
-    <div class="avatar">📋</div>
+    <div class="avatar">📅</div>
     <div class="header-info">
-      <h1>יומן תפריטים</h1>
-      <p>מתוכנן vs בפועל</p>
+      <h1>היסטוריית תפריטים</h1>
+      <p>תפריט מלא לפי תאריך</p>
     </div>
   </header>
 
-  <div class="profile-body" id="menulog-body">
+  <div class="profile-body">
 
-    <!-- Today's entry -->
+    <!-- Date picker -->
     <div class="card">
-      <h3>📅 היום</h3>
-      <div style="margin-bottom:10px">
-        <div class="input-row">
-          <label>סוג יום</label>
-          <select id="ml-day-type">
-            <option value="בית + אימון">🏠 יום בבית + אימון</option>
-            <option value="עבודה">🏢 יום עבודה</option>
-            <option value="עבודה + אימון">🏢💪 עבודה + אימון</option>
-            <option value="מנוחה">😴 יום מנוחה</option>
-            <option value="חוץ">✈️ יום בחוץ</option>
-          </select>
-        </div>
+      <h3>📅 בחר תאריך</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <button id="hist-prev" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:18px;cursor:pointer;">‹</button>
+        <div id="hist-date-display" style="flex:1;text-align:center;font-size:15px;font-weight:600;color:var(--accent)"></div>
+        <button id="hist-next" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:18px;cursor:pointer;">›</button>
+        <button id="hist-today" style="padding:6px 14px;border-radius:20px;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:12px;cursor:pointer;">היום</button>
       </div>
-      <div class="input-row">
-        <label>📝 תפריט מתוכנן</label>
-        <textarea id="ml-planned" placeholder="מה תכננת לאכול היום..." style="background:rgba(255,255,255,0.06);border:1px solid rgba(99,179,237,0.2);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;font-family:'Heebo',sans-serif;outline:none;direction:rtl;width:100%;min-height:80px;resize:none;"></textarea>
-      </div>
-      <div class="input-row">
-        <label>✅ מה אכלת בפועל</label>
-        <textarea id="ml-actual" placeholder="מה אכלת בפועל היום..." style="background:rgba(255,255,255,0.06);border:1px solid rgba(99,179,237,0.2);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;font-family:'Heebo',sans-serif;outline:none;direction:rtl;width:100%;min-height:80px;resize:none;"></textarea>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-primary" id="ml-save-btn" style="flex:1">💾 שמור</button>
-        <button class="btn-primary" id="ml-analyze-btn" style="flex:1;background:linear-gradient(135deg,#48bb78,#38a169)">🤖 נתח</button>
-      </div>
+
+      <!-- Days with data -->
+      <div id="hist-days-strip" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;"></div>
     </div>
 
-    <!-- Search similar -->
-    <div class="card">
-      <h3>🔍 חיפוש תפריטים דומים</h3>
-      <div style="display:flex;gap:8px;">
-        <input id="ml-search" type="text" placeholder='חפש לפי סוג יום...' style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(99,179,237,0.2);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;font-family:'Heebo',sans-serif;outline:none;direction:rtl;" />
-        <button id="ml-search-btn" style="padding:0 16px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:14px;cursor:pointer;">חפש</button>
-      </div>
-      <div id="ml-search-results" style="margin-top:12px;"></div>
+    <!-- Planned menu -->
+    <div class="card" id="hist-planned-card">
+      <h3>📝 תפריט מתוכנן</h3>
+      <div id="hist-planned-content" style="font-size:14px;line-height:1.7;color:var(--text)"></div>
     </div>
 
-    <!-- Stats -->
-    <div class="card">
-      <h3>📊 סטטיסטיקה</h3>
-      <div class="stat-grid" id="ml-stats-grid">
-        <div class="stat-box"><div class="val" id="ml-stat-total">0</div><div class="lbl">ימים מתועדים</div></div>
-        <div class="stat-box"><div class="val" id="ml-stat-reported">0</div><div class="lbl">דיווחי בפועל</div></div>
-      </div>
-      <button class="btn-primary" id="ml-full-analysis-btn" style="margin-top:12px">🤖 ניתוח מלא</button>
+    <!-- Actual eaten -->
+    <div class="card" id="hist-actual-card" style="display:none">
+      <h3>✅ מה אכלת בפועל</h3>
+      <div id="hist-actual-content" style="font-size:14px;line-height:1.7;color:var(--text)"></div>
     </div>
 
-    <!-- History -->
+    <!-- Analysis button -->
+    <div id="hist-analyze-wrap" style="display:none">
+      <button class="btn-primary" id="hist-analyze-btn" style="background:linear-gradient(135deg,#48bb78,#38a169)">🤖 נתח את היום הזה</button>
+    </div>
+
+    <!-- Stats summary -->
     <div class="card">
-      <h3>📆 היסטוריה</h3>
-      <div id="ml-history-list"></div>
+      <h3>📊 סיכום כללי</h3>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="val" id="hs-total">0</div><div class="lbl">ימים מתועדים</div></div>
+        <div class="stat-box"><div class="val" id="hs-reported">0</div><div class="lbl">דיווחי בפועל</div></div>
+      </div>
     </div>
 
   </div>
 
   <nav class="bottom-nav-clone">
     <button class="nav-btn" data-screen="chat"><span class="nav-icon">💬</span>צ'אט</button>
-    <button class="nav-btn active" data-screen="menulog"><span class="nav-icon">📋</span>יומן</button>
+    <button class="nav-btn active" data-screen="menulog"><span class="nav-icon">📅</span>היסטוריה</button>
     <button class="nav-btn" data-screen="weighin"><span class="nav-icon">⚖️</span>שקילה</button>
     <button class="nav-btn" data-screen="profile"><span class="nav-icon">👤</span>פרופיל</button>
   </nav>
@@ -787,6 +788,103 @@ function renderWeighinHistory() {
   }).join('');
 }
 
+// ══════ RENPHO SCREENSHOT ══════
+async function handleRenphoImage(file) {
+  if (!file) return;
+  const status = document.getElementById('renpho-status');
+  const preview = document.getElementById('renpho-preview');
+  const img = document.getElementById('renpho-img');
+
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const base64 = ev.target.result.split(',')[1];
+    const mimeType = file.type || 'image/jpeg';
+
+    // Show preview
+    img.src = ev.target.result;
+    preview.style.display = 'block';
+    status.textContent = '⏳ קורא את הנתונים מ-Renpho...';
+
+    try {
+      const res = await fetch('https://coach-proxy.lapushnianeran.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+              { type: 'text', text: `זהו צילום מסך מאפליקציית Renpho. חלץ את כל המדדים הנומריים שרואים בתמונה ותחזיר אותם בפורמט JSON בלבד, ללא טקסט נוסף. לדוגמה:
+{"weight":82.5,"fat":21.3,"muscle":35.2,"bmi":24.1,"bmr":1850,"visceralFat":9,"boneMass":3.2,"waterPercent":55.1}
+החזר רק JSON תקין. אם מדד לא מופיע בתמונה, אל תכלול אותו.` }
+            ]
+          }]
+        })
+      });
+
+      const data = await res.json();
+      const text = data.content?.[0]?.text || '';
+
+      let parsed;
+      try {
+        const clean = text.replace(/```json|```/g, '').trim();
+        parsed = JSON.parse(clean);
+      } catch {
+        status.textContent = '❌ לא הצלחתי לקרוא את הנתונים. נסה תמונה ברורה יותר.';
+        return;
+      }
+
+      // Update profile
+      if (parsed.weight) { profile.weight = parsed.weight; document.getElementById('wi-weight').value = parsed.weight; }
+      if (parsed.fat)    { profile.fat    = parsed.fat;    document.getElementById('wi-fat').value    = parsed.fat; }
+      if (parsed.muscle) { document.getElementById('wi-muscle').value = parsed.muscle; }
+      saveProfile();
+      updateStatsCard();
+      updateHeaderSubtitle();
+
+      // Save weigh-in
+      const entry = {
+        date: new Date().toISOString(),
+        weight: parsed.weight || null,
+        fat: parsed.fat || null,
+        muscle: parsed.muscle || null,
+        bmi: parsed.bmi || null,
+        bmr: parsed.bmr || null,
+        visceralFat: parsed.visceralFat || null,
+        waterPercent: parsed.waterPercent || null,
+        boneMass: parsed.boneMass || null,
+      };
+      weighins.push(entry);
+      saveWeighins();
+      renderWeighinHistory();
+
+      // Show success + summary
+      const summary = Object.entries(parsed).map(([k,v]) => {
+        const labels = {weight:'משקל',fat:'שומן',muscle:'שריר',bmi:'BMI',bmr:'BMR',visceralFat:'שומן קרביים',waterPercent:'מים',boneMass:'עצם'};
+        const units  = {weight:'ק"ג',fat:'%',muscle:'%',bmi:'',bmr:'קק"ל',visceralFat:'',waterPercent:'%',boneMass:'ק"ג'};
+        return `${labels[k]||k}: ${v}${units[k]||''}`;
+      }).join(' • ');
+      status.innerHTML = `✅ נשמר! <span style="color:var(--text2);font-size:12px">${summary}</span>`;
+
+      // Send to chat for analysis
+      const prompt = `עדכון שקילה מ-Renpho: ${summary}. נתח את ההתקדמות שלי.`;
+      showScreen('chat');
+      await send(prompt);
+
+    } catch (e) {
+      status.textContent = '❌ שגיאה בחיבור. נסה שוב.';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('renpho-gallery-btn').addEventListener('click', () => document.getElementById('renpho-input').click());
+document.getElementById('renpho-camera-btn').addEventListener('click', () => document.getElementById('renpho-camera').click());
+document.getElementById('renpho-input').addEventListener('change', e => { handleRenphoImage(e.target.files[0]); e.target.value=''; });
+document.getElementById('renpho-camera').addEventListener('change', e => { handleRenphoImage(e.target.files[0]); e.target.value=''; });
+
 // ══════ AUTO MENU DETECTION ══════
 const MENU_KEYWORDS_PLANNED = ['ארוחת בוקר','ארוחת צהריים','ארוחת ערב','חטיף','תפריט','לאכול','קלוריות','גרם','חלבון'];
 const ACTUAL_KEYWORDS = ['אכלתי','אכלנו','בסוף אכלתי','בפועל','הייתי','שינוי','אכלת'];
@@ -1055,9 +1153,10 @@ document.getElementById('confirm-clear').addEventListener('click', () => {
 // ── Service Worker ──
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 
-// ══════ MENU LOG ══════
+// ══════ MENU LOG & HISTORY ══════
 const K_MENULOG = 'coach_menulog_v1';
 let menuLog = [];
+let histCurrentDate = new Date();
 
 function loadMenuLog() {
   try { menuLog = JSON.parse(localStorage.getItem(K_MENULOG)) || []; } catch { menuLog = []; }
@@ -1066,6 +1165,8 @@ function saveMenuLog() { localStorage.setItem(K_MENULOG, JSON.stringify(menuLog)
 
 function todayStr() { return new Date().toLocaleDateString('he-IL'); }
 
+function dateToStr(d) { return d.toLocaleDateString('he-IL'); }
+
 function getTodayEntry() {
   const today = todayStr();
   let entry = menuLog.find(e => e.date === today);
@@ -1073,82 +1174,90 @@ function getTodayEntry() {
   return entry;
 }
 
-function findSimilar(keyword) {
-  const today = todayStr();
-  return menuLog.filter(e => e.date !== today && e.dayType.includes(keyword)).slice(-5);
+function getEntryByDate(dateStr) {
+  return menuLog.find(e => e.date === dateStr) || null;
 }
 
 function renderMenuLog() {
-  const entry = getTodayEntry();
-  document.getElementById('ml-day-type').value = entry.dayType || 'בית + אימון';
-  document.getElementById('ml-planned').value  = entry.planned || '';
-  document.getElementById('ml-actual').value   = entry.actual  || '';
-  document.getElementById('ml-stat-total').textContent    = menuLog.filter(e => e.planned).length;
-  document.getElementById('ml-stat-reported').textContent = menuLog.filter(e => e.actual).length;
+  // Update stats
+  document.getElementById('hs-total').textContent    = menuLog.filter(e => e.planned).length;
+  document.getElementById('hs-reported').textContent = menuLog.filter(e => e.actual).length;
 
-  const list = document.getElementById('ml-history-list');
-  const sorted = [...menuLog].reverse().slice(0, 20);
-  if (sorted.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="big-emoji">📋</div>עוד אין ימים מתועדים</div>';
-    return;
+  // Days strip — show all days that have data
+  const strip = document.getElementById('hist-days-strip');
+  const daysWithData = [...menuLog].filter(e => e.planned || e.actual).reverse().slice(0, 14);
+  if (daysWithData.length > 0) {
+    strip.innerHTML = daysWithData.map(e => {
+      const isSelected = e.date === dateToStr(histCurrentDate);
+      return `<button onclick="selectHistDate('${e.date}')" style="flex-shrink:0;padding:5px 10px;border-radius:12px;border:1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'};background:${isSelected ? 'rgba(99,179,237,0.2)' : 'rgba(255,255,255,0.04)'};color:${isSelected ? 'var(--accent)' : 'var(--text2)'};font-size:11px;cursor:pointer;font-family:Heebo,sans-serif;">
+        ${e.date}<br><span style="font-size:10px">${e.dayType||''}</span>
+      </button>`;
+    }).join('');
+  } else {
+    strip.innerHTML = '<div style="font-size:12px;color:var(--text2)">עוד אין ימים מתועדים — בנה תפריט בצ\'אט!</div>';
   }
-  list.innerHTML = sorted.map(e => `
-    <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;background:rgba(255,255,255,0.03);">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-        <span style="font-size:12px;color:var(--text2)">${e.date}</span>
-        <span style="font-size:12px;color:var(--accent);background:rgba(99,179,237,0.1);padding:2px 8px;border-radius:10px">${e.dayType}</span>
-      </div>
-      ${e.planned ? `<div style="font-size:12px;margin-bottom:4px;"><span style="color:var(--text2)">תוכנן: </span>${e.planned.substring(0,80)}${e.planned.length>80?'...':''}</div>` : ''}
-      ${e.actual  ? `<div style="font-size:12px;"><span style="color:var(--green)">בפועל: </span>${e.actual.substring(0,80)}${e.actual.length>80?'...':''}</div>` : ''}
-    </div>`).join('');
+
+  renderHistoryForDate(dateToStr(histCurrentDate));
 }
 
-document.getElementById('ml-save-btn').addEventListener('click', () => {
-  const entry = getTodayEntry();
-  entry.dayType = document.getElementById('ml-day-type').value;
-  entry.planned = document.getElementById('ml-planned').value.trim();
-  entry.actual  = document.getElementById('ml-actual').value.trim();
-  saveMenuLog();
+function selectHistDate(dateStr) {
+  const parts = dateStr.split('/');
+  histCurrentDate = new Date(parts[2], parts[1]-1, parts[0]);
   renderMenuLog();
-  const btn = document.getElementById('ml-save-btn');
-  btn.textContent = '✅ נשמר!';
-  setTimeout(() => btn.textContent = '💾 שמור', 2000);
-});
+}
 
-document.getElementById('ml-analyze-btn').addEventListener('click', async () => {
-  const entry = getTodayEntry();
-  entry.dayType = document.getElementById('ml-day-type').value;
-  entry.planned = document.getElementById('ml-planned').value.trim();
-  entry.actual  = document.getElementById('ml-actual').value.trim();
-  saveMenuLog();
-  if (!entry.actual) { alert('כתוב קודם מה אכלת בפועל'); return; }
-  const prompt = `ניתוח יום ${entry.dayType}:\nתכנון: ${entry.planned || 'לא תועד'}\nבפועל: ${entry.actual}\n\nנתח: האם עמדתי ביעדים? מה היה טוב? מה לשפר? ציון 1-10.`;
-  showScreen('chat');
-  await send(prompt);
-});
+function renderHistoryForDate(dateStr) {
+  const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  const d = histCurrentDate;
+  const dayName = days[d.getDay()];
+  document.getElementById('hist-date-display').textContent = `יום ${dayName}, ${dateStr}`;
 
-document.getElementById('ml-search-btn').addEventListener('click', () => {
-  const kw = document.getElementById('ml-search').value.trim();
-  if (!kw) return;
-  const results = findSimilar(kw);
-  const container = document.getElementById('ml-search-results');
-  if (results.length === 0) {
-    container.innerHTML = `<div style="font-size:13px;color:var(--text2);text-align:center;padding:12px">לא נמצאו תפריטים דומים</div>`;
-    return;
+  const entry = getEntryByDate(dateStr);
+  const plannedCard  = document.getElementById('hist-planned-card');
+  const actualCard   = document.getElementById('hist-actual-card');
+  const analyzeWrap  = document.getElementById('hist-analyze-wrap');
+  const plannedEl    = document.getElementById('hist-planned-content');
+  const actualEl     = document.getElementById('hist-actual-content');
+
+  if (!entry || !entry.planned) {
+    plannedEl.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:16px">אין תפריט מתוכנן לתאריך זה</div>';
+  } else {
+    // Format planned menu nicely
+    plannedEl.innerHTML = entry.planned
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#93c5fd">$1</strong>')
+      .replace(/\n/g, '<br>');
+    if (entry.dayType) {
+      plannedEl.innerHTML = `<div style="margin-bottom:8px"><span style="background:rgba(99,179,237,0.15);color:var(--accent);padding:3px 10px;border-radius:10px;font-size:12px">${entry.dayType}</span></div>` + plannedEl.innerHTML;
+    }
   }
-  container.innerHTML = results.map(e => `
-    <div style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:6px;background:rgba(255,255,255,0.03);">
-      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">${e.date} • ${e.dayType}</div>
-      ${e.planned ? `<div style="font-size:12px;margin-bottom:3px"><span style="color:var(--text2)">תוכנן: </span>${e.planned.substring(0,100)}</div>` : ''}
-      ${e.actual  ? `<div style="font-size:12px"><span style="color:var(--green)">בפועל: </span>${e.actual.substring(0,100)}</div>` : ''}
-    </div>`).join('');
-});
 
-document.getElementById('ml-full-analysis-btn').addEventListener('click', async () => {
-  const recent = menuLog.slice(-10);
-  if (recent.length === 0) { alert('עוד אין נתונים לניתוח'); return; }
-  const summary = recent.map(e => `${e.date} (${e.dayType}): תוכנן=${!!e.planned}, בפועל=${!!e.actual}`).join('\n');
-  const prompt = `ניתוח עקביות תזונה על ${recent.length} ימים:\n${summary}\n\nתן ניתוח: עקביות, מגמות, 3 המלצות לשיפור.`;
+  if (entry && entry.actual) {
+    actualCard.style.display = 'block';
+    actualEl.innerHTML = entry.actual.replace(/\n/g, '<br>');
+  } else {
+    actualCard.style.display = 'none';
+  }
+
+  analyzeWrap.style.display = (entry && entry.planned && entry.actual) ? 'block' : 'none';
+}
+
+document.getElementById('hist-prev').addEventListener('click', () => {
+  histCurrentDate.setDate(histCurrentDate.getDate() - 1);
+  renderMenuLog();
+});
+document.getElementById('hist-next').addEventListener('click', () => {
+  histCurrentDate.setDate(histCurrentDate.getDate() + 1);
+  renderMenuLog();
+});
+document.getElementById('hist-today').addEventListener('click', () => {
+  histCurrentDate = new Date();
+  renderMenuLog();
+});
+document.getElementById('hist-analyze-btn').addEventListener('click', async () => {
+  const dateStr = dateToStr(histCurrentDate);
+  const entry = getEntryByDate(dateStr);
+  if (!entry) return;
+  const prompt = `ניתוח יום ${dateStr} (${entry.dayType}):\nתכנון:\n${entry.planned}\n\nבפועל:\n${entry.actual}\n\nנתח: האם עמדתי ביעדים? מה היה טוב? מה לשפר? ציון 1-10.`;
   showScreen('chat');
   await send(prompt);
 });
