@@ -221,14 +221,13 @@
 
   <div id="messages"></div>
 
-  <div id="quick-wrap">
-    <p>פעולות מהירות</p>
-    <div id="quick-scroll"></div>
-  </div>
+
 
   <div id="input-bar">
-    <input type="file" id="img-input" accept="image/*" style="display:none" />
-    <button id="img-btn" title="שלח תמונה" style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📷</button>
+    <input type="file" id="img-input-gallery" accept="image/*" style="display:none" />
+    <input type="file" id="img-input-camera" accept="image/*" capture="environment" style="display:none" />
+    <button id="gallery-btn" title="העלה תמונה" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🖼️</button>
+    <button id="camera-btn" title="צלם תמונה" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📷</button>
     <textarea id="input" placeholder="ספר לי על היום שלך..." rows="1"></textarea>
     <button id="send-btn" disabled>➤</button>
   </div>
@@ -979,15 +978,8 @@ inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey)
 sendBtn.addEventListener('click', () => send());
 
 // ══════ IMAGE UPLOAD ══════
-document.getElementById('img-btn').addEventListener('click', () => {
-  document.getElementById('img-input').click();
-});
-
-document.getElementById('img-input').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
+async function handleImageFile(file) {
   if (!file) return;
-  e.target.value = '';
-
   const reader = new FileReader();
   reader.onload = async (ev) => {
     const base64 = ev.target.result.split(',')[1];
@@ -995,7 +987,6 @@ document.getElementById('img-input').addEventListener('change', async (e) => {
     const caption = inputEl.value.trim() || 'נתח את התמונה הזו בהקשר של הכושר והתזונה שלי.';
     inputEl.value = ''; autoResize();
 
-    // Show image preview in chat
     const row = document.createElement('div');
     row.className = 'msg-row user';
     row.innerHTML = `<div class="bubble" style="padding:6px"><img src="data:${mimeType};base64,${base64}" style="max-width:100%;border-radius:10px;display:block;margin-bottom:6px" /><span style="font-size:13px">${caption}</span></div>`;
@@ -1043,18 +1034,14 @@ document.getElementById('img-input').addEventListener('change', async (e) => {
     }
   };
   reader.readAsDataURL(file);
-});
+}
+
+document.getElementById('gallery-btn').addEventListener('click', () => document.getElementById('img-input-gallery').click());
+document.getElementById('camera-btn').addEventListener('click', () => document.getElementById('img-input-camera').click());
+document.getElementById('img-input-gallery').addEventListener('change', e => { handleImageFile(e.target.files[0]); e.target.value=''; });
+document.getElementById('img-input-camera').addEventListener('change', e => { handleImageFile(e.target.files[0]); e.target.value=''; });
 
 // ══════ END IMAGE UPLOAD ══════
-(function buildQuick() {
-  const scroll = document.getElementById('quick-scroll');
-  QUICK_ACTIONS.forEach(a => {
-    const chip = document.createElement('button');
-    chip.className = 'chip'; chip.textContent = a.label;
-    chip.addEventListener('click', () => send(a.prompt));
-    scroll.appendChild(chip);
-  });
-})();
 
 // ── Clear ──
 document.getElementById('clear-btn').addEventListener('click', () => document.getElementById('confirm-overlay').classList.add('show'));
