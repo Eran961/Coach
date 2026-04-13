@@ -1157,7 +1157,7 @@ async function send(text) {
       }),
     });
     const data = await res.json();
-    const reply = data.content?.[0]?.text || 'שגיאה בקבלת תשובה.';
+    const reply = data.content?.[0]?.text || `שגיאה: ${JSON.stringify(data.error || data)}`;
     typingRow.remove();
     chatHistory.push({ role:'assistant', content:reply, ts:Date.now() });
     saveHistory();
