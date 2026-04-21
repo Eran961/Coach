@@ -904,7 +904,7 @@ async function handleRenphoImage(file) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
+          model: 'claude-sonnet-4-20250514',
           max_tokens: 500,
           messages: [{
             role: 'user',
@@ -1150,7 +1150,7 @@ async function send(text) {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
+        model:'claude-sonnet-4-20250514',
         max_tokens:1000,
         system: buildSystemPrompt(),
         messages: apiMessages,
@@ -1212,7 +1212,7 @@ async function handleImageFile(file) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
+          model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
           system: buildSystemPrompt(),
           messages: [
