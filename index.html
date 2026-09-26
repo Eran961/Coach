@@ -58,10 +58,9 @@ header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(1
 .card h3{font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600;letter-spacing:.2px;}
 
 /* ── DATE NAV ── */
-.date-nav{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-.date-nav-center{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+.date-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
 .date-nav button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:17px;cursor:pointer;flex-shrink:0;}
-.date-nav .lbl{flex:1;min-width:0;text-align:center;font-size:14.5px;font-weight:700;}
+.date-nav .lbl{text-align:center;font-size:14.5px;font-weight:700;min-width:100px;}
 .date-nav .lbl small{display:block;font-size:11px;color:var(--text2);font-weight:400;margin-top:1px;}
 .today-btn{padding:7px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(201,162,39,.1);color:var(--gold-soft);font-size:11.5px;cursor:pointer;font-family:'Heebo',sans-serif;flex-shrink:0;white-space:nowrap;}
 
@@ -217,11 +216,9 @@ textarea.plain::placeholder{color:#5a5648;}
   <div id="menu-view" class="view active">
 
     <div class="date-nav">
-      <div class="date-nav-center">
-        <button id="menu-prev">‹</button>
-        <div class="lbl" id="menu-date-lbl">היום<small id="menu-date-sub"></small></div>
-        <button id="menu-next">›</button>
-      </div>
+      <button id="menu-prev">‹</button>
+      <div class="lbl" id="menu-date-lbl">היום<small id="menu-date-sub"></small></div>
+      <button id="menu-next">›</button>
       <button class="today-btn" id="menu-today-btn">היום</button>
     </div>
 
@@ -745,6 +742,7 @@ function toggleSimple(catKey, name) {
   else arr.push({ name });
   mealData[catKey] = arr;
   saveJSON(K_DAYS, days);
+  renderTargets(entry);
   renderMealTabs(entry);
   renderCategories(entry);
   reopenCat(catKey);
