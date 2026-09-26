@@ -58,11 +58,22 @@ header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(1
 .card h3{font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600;letter-spacing:.2px;}
 
 /* ── DATE NAV ── */
-.date-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.date-nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;direction:ltr;}
 .date-nav button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:17px;cursor:pointer;flex-shrink:0;}
-.date-nav .lbl{text-align:center;font-size:14.5px;font-weight:700;min-width:100px;}
+.date-nav .lbl{direction:rtl;text-align:center;font-size:14.5px;font-weight:700;min-width:100px;}
 .date-nav .lbl small{display:block;font-size:11px;color:var(--text2);font-weight:400;margin-top:1px;}
-.today-btn{padding:7px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(201,162,39,.1);color:var(--gold-soft);font-size:11.5px;cursor:pointer;font-family:'Heebo',sans-serif;flex-shrink:0;white-space:nowrap;}
+.today-btn{height:36px;padding:0 16px;border-radius:18px;border:1px solid var(--line);background:var(--panel);color:var(--gold-soft);font-size:12.5px;cursor:pointer;font-family:'Heebo',sans-serif;flex-shrink:0;white-space:nowrap;display:flex;align-items:center;justify-content:center;direction:rtl;}
+
+/* ── CUSTOM/FREE-TEXT ADD ROW ── */
+.custom-add-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.custom-add-row input{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--text);font-size:16px;font-family:'Heebo',sans-serif;outline:none;}
+.custom-add-row input[type="text"]{flex:2;min-width:100px;direction:rtl;}
+.custom-add-row input[type="number"]{width:64px;text-align:center;}
+.custom-add-btn{padding:0 14px;border-radius:10px;border:none;background:var(--gold);color:#1a1710;font-size:13px;cursor:pointer;font-weight:700;white-space:nowrap;font-family:'Heebo',sans-serif;}
+.custom-item-row{display:flex;align-items:center;justify-content:space-between;padding:9px 8px;border-bottom:1px solid rgba(255,255,255,0.04);gap:8px;}
+.custom-item-row .ci-name{font-size:13px;flex:1;}
+.custom-item-row .ci-meta{font-size:10.5px;color:var(--text2);margin-top:2px;}
+.custom-item-row button{background:none;border:none;color:#c1666b;font-size:16px;cursor:pointer;flex-shrink:0;}
 
 /* ── METHOD SWITCH ── */
 .method-switch{display:flex;background:var(--bg2);border-radius:12px;padding:3px;margin-bottom:12px;border:1px solid var(--line);}
@@ -82,7 +93,7 @@ header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(1
 .meal-tab .mt-count{font-size:9px;opacity:.75;margin-right:3px;}
 
 /* ── PROGRESS RINGS ── */
-.targets-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.targets-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px;}
 .target-box{background:var(--bg2);border-radius:12px;padding:10px 4px;text-align:center;border:1px solid var(--line);}
 .target-box .tv{font-size:17px;font-weight:800;}
 .target-box .tl{font-size:10px;color:var(--text2);margin-top:1px;}
@@ -465,6 +476,12 @@ function computeMacroTotals(entry, mode) {
     });
     (md.fruit || []).forEach(() => { totals.carb += (FOOD_DB.fruit.carbEq || 0.5); });
     (md.outside || []).forEach(sel => {
+      if (sel.custom) {
+        totals.protein += sel.protein || 0;
+        totals.carb += sel.carb || 0;
+        totals.fat += sel.fat || 0;
+        return;
+      }
       const def = findFoodDefByName('outside', sel.name);
       if (def) {
         totals.protein += def.protein || 0;
@@ -592,6 +609,11 @@ function renderTargets(entry) {
     <div class="tv" style="color:#5f9c7a">${vegCount}</div>
     <div class="tl">🥦 ירקות</div>
   </div>`;
+  const freeCount = sumCategory(entry, currentMode, 'free').length;
+  row.innerHTML += `<div class="target-box ${freeCount>0?'done':''}">
+    <div class="tv" style="color:#ba68c8">${freeCount}</div>
+    <div class="tl">🍬 חופשי</div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════
@@ -663,12 +685,12 @@ function renderCatItems(catKey, mealData) {
     return html;
   }
 
-  if (catKey === 'fruit' || catKey === 'free' || catKey === 'outside') {
+  if (catKey === 'fruit' || catKey === 'free') {
     const items = FOOD_DB[catKey].items;
     const selected = mealData[catKey] || [];
     let hint = '';
     if (catKey === 'fruit') hint = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">כל פרי = חצי מנת פחמימה, נספר אוטומטית בסך היום</div>`;
-    return hint + items.map(it => {
+    const listHtml = items.map(it => {
       const name = typeof it === 'string' ? it : it.name;
       const note = typeof it === 'object' ? it.note : null;
       const isSelected = selected.some(s => s.name === name);
@@ -680,12 +702,61 @@ function renderCatItems(catKey, mealData) {
         <button class="qty-btn" style="${isSelected?'background:var(--gold);color:#1a1710;border-color:var(--gold)':''}" onclick="toggleSimple('${catKey}','${name.replace(/'/g,"\\'")}')">${isSelected?'✓':'+'}</button>
       </div>`;
     }).join('');
+    const customList = selected.filter(s => s.custom);
+    const customHtml = customList.length ? `<div class="section-label">מה שהוספת בעצמך</div>` + customList.map(it => `
+      <div class="custom-item-row">
+        <div class="ci-name">${it.name}</div>
+        <button onclick="removeCustomById('${catKey}','${it.id}')">✕</button>
+      </div>`).join('') : '';
+    const addForm = `<div class="section-label">הוספת פריט שלא ברשימה</div>
+      <div class="custom-add-row">
+        <input type="text" id="custom-name-${catKey}" placeholder="${catKey==='fruit'?'פרי אחר...':'פריט אחר...'}" />
+        <button class="custom-add-btn" onclick="addCustomSimple('${catKey}')">הוסף</button>
+      </div>`;
+    return hint + listHtml + customHtml + addForm;
+  }
+
+  if (catKey === 'outside') {
+    const items = FOOD_DB.outside.items;
+    const selected = mealData.outside || [];
+    const listHtml = items.map(it => {
+      const isSelected = selected.some(s => s.name === it.name);
+      return `<div class="food-item">
+        <div>
+          <div class="food-name">${it.name}</div>
+          ${it.note ? `<div style="font-size:10.5px;color:var(--text2);margin-top:2px">${it.note}</div>` : ''}
+        </div>
+        <button class="qty-btn" style="${isSelected?'background:var(--gold);color:#1a1710;border-color:var(--gold)':''}" onclick="toggleSimple('outside','${it.name.replace(/'/g,"\\'")}')">${isSelected?'✓':'+'}</button>
+      </div>`;
+    }).join('');
+    const customList = selected.filter(s => s.custom);
+    const customHtml = customList.length ? `<div class="section-label">מה שהוספת בעצמך</div>` + customList.map(it => {
+      const parts = [];
+      if (it.protein) parts.push(fmtNum(it.protein) + ' חלבון');
+      if (it.carb) parts.push(fmtNum(it.carb) + ' פחמימה');
+      if (it.fat) parts.push(fmtNum(it.fat) + ' שומן');
+      return `<div class="custom-item-row">
+        <div><div class="ci-name">${it.name}</div><div class="ci-meta">${parts.join(' + ') || 'ללא ערך'}</div></div>
+        <button onclick="removeCustomById('outside','${it.id}')">✕</button>
+      </div>`;
+    }).join('') : '';
+    const addForm = `<div class="section-label">הוספת מנה שלא ברשימה (בכמה מנות היא שווה)</div>
+      <div class="custom-add-row">
+        <input type="text" id="custom-name-outside" placeholder="שם המנה..." style="flex:1 1 100%" />
+      </div>
+      <div class="custom-add-row">
+        <input type="number" step="0.5" min="0" id="custom-protein-outside" placeholder="חלבון" />
+        <input type="number" step="0.5" min="0" id="custom-carb-outside" placeholder="פחמימה" />
+        <input type="number" step="0.5" min="0" id="custom-fat-outside" placeholder="שומן" />
+        <button class="custom-add-btn" onclick="addCustomOutside()">הוסף</button>
+      </div>`;
+    return listHtml + customHtml + addForm;
   }
 
   // protein / carb / fat — grouped by heading (matching Karin's document), quantity based
   const selected = mealData[catKey] || [];
   const groups = FOOD_DB[catKey].groups || [];
-  return groups.map(g => {
+  const groupsHtml = groups.map(g => {
     const rows = g.items.map(it => {
       const sel = selected.find(s => s.name === it.name);
       const qty = sel ? sel.qty : 0;
@@ -703,6 +774,21 @@ function renderCatItems(catKey, mealData) {
     }).join('');
     return `<div class="section-label">${g.label}</div>${rows}`;
   }).join('');
+
+  const customList = selected.filter(s => s.custom);
+  const customHtml = customList.length ? `<div class="section-label">מה שהוספת בעצמך</div>` + customList.map(it => `
+    <div class="custom-item-row">
+      <div><div class="ci-name">${it.name}</div><div class="ci-meta">${fmtNum(it.qty)} מנות ${FOOD_DB[catKey].label}</div></div>
+      <button onclick="removeCustomById('${catKey}','${it.id}')">✕</button>
+    </div>`).join('') : '';
+  const addForm = `<div class="section-label">הוספת מנה שלא ברשימה</div>
+    <div class="custom-add-row">
+      <input type="text" id="custom-name-${catKey}" placeholder="שם המנה..." />
+      <input type="number" step="0.5" min="0.5" id="custom-qty-${catKey}" placeholder="כמות מנות" />
+      <button class="custom-add-btn" onclick="addCustomItem('${catKey}')">הוסף</button>
+    </div>`;
+
+  return groupsHtml + customHtml + addForm;
 }
 
 function toggleCat(catKey) {
@@ -741,6 +827,73 @@ function toggleSimple(catKey, name) {
   if (idx >= 0) arr.splice(idx, 1);
   else arr.push({ name });
   mealData[catKey] = arr;
+  saveJSON(K_DAYS, days);
+  renderTargets(entry);
+  renderMealTabs(entry);
+  renderCategories(entry);
+  reopenCat(catKey);
+  renderDaySummary(entry);
+}
+
+function makeCustomId() { return 'c' + Date.now() + Math.floor(Math.random() * 1000); }
+
+// Custom item with a stated portion value — for protein/carb/fat categories
+function addCustomItem(catKey) {
+  const nameInput = document.getElementById('custom-name-' + catKey);
+  const qtyInput = document.getElementById('custom-qty-' + catKey);
+  const name = nameInput.value.trim();
+  const qty = parseFloat(qtyInput.value);
+  if (!name || !qty || qty <= 0) { alert('נא למלא שם ומספר מנות תקין'); return; }
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  mealData[catKey].push({ id: makeCustomId(), name, qty, custom: true });
+  saveJSON(K_DAYS, days);
+  renderTargets(entry);
+  renderMealTabs(entry);
+  renderCategories(entry);
+  reopenCat(catKey);
+  renderDaySummary(entry);
+}
+
+// Simple named custom item (no portion value needed) — for fruit / free basket
+function addCustomSimple(catKey) {
+  const nameInput = document.getElementById('custom-name-' + catKey);
+  const name = nameInput.value.trim();
+  if (!name) { alert('נא למלא שם'); return; }
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  mealData[catKey].push({ id: makeCustomId(), name, custom: true });
+  saveJSON(K_DAYS, days);
+  renderTargets(entry);
+  renderMealTabs(entry);
+  renderCategories(entry);
+  reopenCat(catKey);
+  renderDaySummary(entry);
+}
+
+// Custom eating-out item with its own protein/carb/fat portion equivalents
+function addCustomOutside() {
+  const name = document.getElementById('custom-name-outside').value.trim();
+  const protein = parseFloat(document.getElementById('custom-protein-outside').value) || 0;
+  const carb = parseFloat(document.getElementById('custom-carb-outside').value) || 0;
+  const fat = parseFloat(document.getElementById('custom-fat-outside').value) || 0;
+  if (!name) { alert('נא למלא שם מנה'); return; }
+  if (!protein && !carb && !fat) { alert('נא למלא ערך במנות עבור לפחות אחת מהקטגוריות'); return; }
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  mealData.outside.push({ id: makeCustomId(), name, protein, carb, fat, custom: true });
+  saveJSON(K_DAYS, days);
+  renderTargets(entry);
+  renderMealTabs(entry);
+  renderCategories(entry);
+  reopenCat('outside');
+  renderDaySummary(entry);
+}
+
+function removeCustomById(catKey, id) {
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  mealData[catKey] = (mealData[catKey] || []).filter(i => i.id !== id);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -791,12 +944,25 @@ function buildMealRows(entry, mode) {
     const md = entry[mode][meal];
     const items = [];
     ['protein','carb','fat'].forEach(cat => {
-      (md[cat]||[]).forEach(it => items.push(`${FOOD_DB[cat].icon} ${it.name}${it.qty>1?' ×'+it.qty:''}`));
+      (md[cat]||[]).forEach(it => {
+        const qty = it.qty || 1;
+        items.push(`${FOOD_DB[cat].icon} ${it.name}${qty !== 1 ? ' ×' + fmtNum(qty) : ''}${it.custom ? ' (חופשי)' : ''}`);
+      });
     });
     (md.veg||[]).forEach(it => items.push(`🥦 ${it.name}`));
     (md.fruit||[]).forEach(it => items.push(`🍎 ${it.name}`));
     (md.free||[]).forEach(it => items.push(`🍬 ${it.name}`));
-    (md.outside||[]).forEach(it => items.push(`🍽️ ${it.name}`));
+    (md.outside||[]).forEach(it => {
+      let extra = '';
+      if (it.custom) {
+        const parts = [];
+        if (it.protein) parts.push(fmtNum(it.protein) + ' חלבון');
+        if (it.carb) parts.push(fmtNum(it.carb) + ' פחמימה');
+        if (it.fat) parts.push(fmtNum(it.fat) + ' שומן');
+        extra = parts.length ? ' — ' + parts.join(' + ') : '';
+      }
+      items.push(`🍽️ ${it.name}${extra}`);
+    });
     if (items.length) rows.push({ meal, items });
   });
   return rows;
