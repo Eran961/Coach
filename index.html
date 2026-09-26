@@ -21,7 +21,18 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;overflow:hidden;}
-#app{display:flex;flex-direction:column;height:100dvh;max-width:720px;margin:0 auto;position:relative;}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:720px;width:100%;margin:0 auto;position:relative;}
+
+/* ── DESKTOP / WIDE SCREENS ── */
+@media (min-width:760px){
+  body{background:radial-gradient(circle at 50% 0%, #201d15, #0c0b08 75%);}
+  #app{height:94vh;height:94dvh;margin:3vh auto;border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.55);border:1px solid var(--line);overflow:hidden;}
+}
+@media (max-width:359px){
+  .h-title{font-size:17px;}
+  .input-grid{gap:7px;}
+  .targets-row{gap:6px;}
+}
 
 /* ── HEADER ── */
 header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(180deg,var(--bg2),var(--bg));border-bottom:1px solid var(--line);flex-shrink:0;}
@@ -103,7 +114,7 @@ header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(1
 .sel-row button{background:none;border:none;color:#c1666b;font-size:15px;cursor:pointer;padding:2px 6px;}
 
 /* ── ACTUAL/PLANNED TEXTAREAS ── */
-textarea.plain{width:100%;min-height:90px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;color:var(--text);font-size:13.5px;font-family:'Heebo',sans-serif;resize:none;outline:none;direction:rtl;line-height:1.6;}
+textarea.plain{width:100%;min-height:90px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;color:var(--text);font-size:16px;font-family:'Heebo',sans-serif;resize:none;outline:none;direction:rtl;line-height:1.6;}
 textarea.plain:focus{border-color:var(--gold);}
 textarea.plain::placeholder{color:#5a5648;}
 
@@ -148,7 +159,7 @@ textarea.plain::placeholder{color:#5a5648;}
 .input-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
 .input-field{display:flex;flex-direction:column;gap:5px;}
 .input-field label{font-size:11px;color:var(--text2);}
-.input-field input{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-family:'Heebo',sans-serif;outline:none;text-align:center;}
+.input-field input{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-size:16px;font-family:'Heebo',sans-serif;outline:none;text-align:center;width:100%;}
 .input-field input:focus{border-color:var(--gold);}
 .input-field.wide{grid-column:span 2;}
 
@@ -641,7 +652,7 @@ function renderCatItems(catKey, mealData) {
   if (catKey === 'veg') {
     const list = mealData.veg || [];
     let html = `<div style="display:flex;gap:8px;margin-bottom:10px">
-      <input type="text" id="veg-input" placeholder="הוסף ירק..." style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;font-family:Heebo,sans-serif;outline:none;direction:rtl" />
+      <input type="text" id="veg-input" placeholder="הוסף ירק..." style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--text);font-size:16px;font-family:Heebo,sans-serif;outline:none;direction:rtl" />
       <button onclick="addVeg()" style="padding:0 16px;border-radius:10px;border:none;background:var(--gold);color:#1a1710;font-size:13px;cursor:pointer;font-weight:700">הוסף</button>
     </div>`;
     if (list.length) {
