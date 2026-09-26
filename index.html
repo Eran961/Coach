@@ -342,6 +342,16 @@ textarea.plain::placeholder{color:#5a5648;}
     </div>
 
     <div class="card">
+      <h3>💾 גיבוי ושחזור</h3>
+      <p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px">כל הנתונים שמורים רק בטלפון הזה. מומלץ להוריד גיבוי מדי פעם כדי לא לאבד מידע אם הדפדפן ינוקה או האפליקציה תוסר.</p>
+      <div class="btn-row">
+        <button class="btn btn-gold" id="backup-export-btn">⬇️ הורדת גיבוי</button>
+        <button class="btn btn-outline" id="backup-import-btn">⬆️ שחזור מגיבוי</button>
+      </div>
+      <input type="file" id="backup-file-input" accept="application/json" style="display:none" />
+    </div>
+
+    <div class="card">
       <h3>📏 מדידה חדשה</h3>
       <div class="input-grid">
         <div class="input-field wide"><label>תאריך פגישה</label><input type="date" id="me-date" /></div>
@@ -582,6 +592,12 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
     const entry = getDayEntry(dateKey(currentDate));
+    // First time opening "מה אכלתי בפועל" for this day: start from what was
+    // planned, so the user only has to adjust what actually differed.
+    if (currentMode === 'actual' && !dayHasData(entry, 'actual') && dayHasData(entry, 'planned')) {
+      entry.actual = JSON.parse(JSON.stringify(entry.planned));
+      saveJSON(K_DAYS, days);
+    }
     renderMealTabs(entry);
     renderTargets(entry);
     renderCategories(entry);
@@ -1385,6 +1401,54 @@ document.getElementById('pf-save-btn').addEventListener('click', () => {
   };
   saveJSON(K_PROFILE, profile);
   showToast('✅ הנתונים נשמרו!');
+});
+
+// ═══════════════════════════════════════════
+// BACKUP & RESTORE (everything is local-only, so this is the only copy)
+// ═══════════════════════════════════════════
+function exportBackup() {
+  const data = {
+    app: 'mass-app',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    days, weighins, measures, reports, profile
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `גיבוי-מסה-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ קובץ הגיבוי הורד');
+}
+
+function importBackupFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let data;
+    try { data = JSON.parse(e.target.result); } catch (err) { alert('הקובץ שנבחר אינו קובץ גיבוי תקין'); return; }
+    if (!data || typeof data !== 'object') { alert('הקובץ שנבחר אינו קובץ גיבוי תקין'); return; }
+    if (!confirm('שחזור מגיבוי יחליף את כל הנתונים הנוכחיים באפליקציה בנתונים מתוך הקובץ. להמשיך?')) return;
+    if (data.days) saveJSON(K_DAYS, data.days);
+    if (data.weighins) saveJSON(K_WEIGHINS, data.weighins);
+    if (data.measures) saveJSON(K_MEASURES, data.measures);
+    if (data.reports) saveJSON(K_REPORTS, data.reports);
+    if (data.profile) saveJSON(K_PROFILE, data.profile);
+    showToast('✅ השחזור הושלם — טוען מחדש...');
+    setTimeout(() => location.reload(), 800);
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('backup-export-btn').addEventListener('click', exportBackup);
+document.getElementById('backup-import-btn').addEventListener('click', () => document.getElementById('backup-file-input').click());
+document.getElementById('backup-file-input').addEventListener('change', (e) => {
+  if (e.target.files && e.target.files[0]) importBackupFile(e.target.files[0]);
+  e.target.value = '';
 });
 
 // Seed the first measurement (from Karin's intake meeting) if none saved yet
