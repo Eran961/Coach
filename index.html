@@ -310,6 +310,7 @@ textarea.plain::placeholder{color:#5a5648;}
         <textarea class="plain" id="report-good-thing" placeholder="למשל: הצלחתי להוסיף עוד חזרה בסקוואט..." style="min-height:70px"></textarea>
       </div>
       <button class="btn btn-gold" id="report-save-btn" style="margin-top:10px">💾 שמור דיווח שבועי</button>
+      <button class="btn btn-outline" id="full-report-btn" style="margin-top:8px">📄 הפקת דוח שבועי מלא (שקילות + תפריט)</button>
     </div>
 
     <div class="card">
@@ -1271,6 +1272,99 @@ function renderReportHistory() {
 function toggleReport(idx) {
   document.getElementById('report-body-' + idx).classList.toggle('open');
 }
+
+// ═══════════════════════════════════════════
+// FULL WEEKLY REPORT (Sunday–Saturday): weigh-ins + what was actually eaten
+// each day, as one copyable text block — for sending to Karin.
+// ═══════════════════════════════════════════
+let reportWeekAnchor = new Date();
+const REPORT_DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+
+function getSundayOf(d) {
+  const nd = new Date(d);
+  nd.setHours(0,0,0,0);
+  nd.setDate(nd.getDate() - nd.getDay());
+  return nd;
+}
+
+function openFullWeekReport() {
+  reportWeekAnchor = new Date();
+  renderFullWeekReport();
+  document.getElementById('detail-overlay').classList.add('show');
+}
+
+function shiftReportWeek(delta) {
+  reportWeekAnchor.setDate(reportWeekAnchor.getDate() + delta * 7);
+  renderFullWeekReport();
+}
+
+function buildWeekReportText() {
+  const sunday = getSundayOf(reportWeekAnchor);
+  const saturday = new Date(sunday); saturday.setDate(saturday.getDate() + 6);
+  const lines = [];
+  lines.push(`📋 דוח שבועי: ${sunday.toLocaleDateString('he-IL')} – ${saturday.toLocaleDateString('he-IL')}`);
+  lines.push('');
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sunday); d.setDate(d.getDate() + i);
+    const key = dateKey(d);
+    lines.push(`── יום ${REPORT_DAY_NAMES[i]}, ${key} ──`);
+
+    const wi = weighins.find(w => dateKey(new Date(w.date)) === key);
+    lines.push(wi ? `⚖️ משקל: ${wi.weight} ק"ג` : '⚖️ משקל: לא נשקל');
+
+    const entry = days[key];
+    if (entry && entry.method === 'fixed') {
+      lines.push('🍽️ תפריט: לפי התפריט הקבוע של קארין');
+    } else if (entry && dayHasData(entry, 'actual')) {
+      const rows = buildMealRows(entry, 'actual');
+      if (rows.length) {
+        rows.forEach(r => lines.push(`🍽️ ${r.meal}: ${r.items.join(', ')}`));
+      } else {
+        lines.push('🍽️ לא תועד מה נאכל בפועל');
+      }
+    } else {
+      lines.push('🍽️ לא תועד מה נאכל בפועל');
+    }
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
+function renderFullWeekReport() {
+  const sunday = getSundayOf(reportWeekAnchor);
+  const saturday = new Date(sunday); saturday.setDate(saturday.getDate() + 6);
+  const body = document.getElementById('detail-body');
+  body.innerHTML = `
+    <h3>📋 דוח שבועי מלא</h3>
+    <div class="date-nav" style="margin-bottom:12px">
+      <button onclick="shiftReportWeek(-1)">‹</button>
+      <div class="lbl">${sunday.toLocaleDateString('he-IL')} – ${saturday.toLocaleDateString('he-IL')}</div>
+      <button onclick="shiftReportWeek(1)">›</button>
+    </div>
+    <textarea class="plain" id="full-report-text" style="min-height:320px;font-size:13px;line-height:1.7" readonly></textarea>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-gold" onclick="copyFullReport()">📋 העתק דוח</button>
+      <button class="btn btn-outline" onclick="document.getElementById('detail-overlay').classList.remove('show')">סגור</button>
+    </div>
+  `;
+  document.getElementById('full-report-text').value = buildWeekReportText();
+}
+
+function copyFullReport() {
+  const ta = document.getElementById('full-report-text');
+  ta.focus();
+  ta.select();
+  const finish = () => showToast('✅ הדוח הועתק!');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(finish).catch(() => {
+      try { document.execCommand('copy'); finish(); } catch (e) { showToast('לא ניתן להעתיק אוטומטית — סמן ידנית'); }
+    });
+  } else {
+    try { document.execCommand('copy'); finish(); } catch (e) { showToast('לא ניתן להעתיק אוטומטית — סמן ידנית'); }
+  }
+}
+
+document.getElementById('full-report-btn').addEventListener('click', openFullWeekReport);
 
 // ═══════════════════════════════════════════
 // PROFILE (client card, from Karin's intake form)
