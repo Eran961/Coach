@@ -277,6 +277,24 @@ textarea.plain::placeholder{color:#5a5648;}
       <button class="btn btn-gold" id="wi-save-btn" style="margin-top:6px">💾 שמור שקילה</button>
     </div>
 
+    <div class="card" style="background:rgba(201,162,39,.06);border-color:rgba(201,162,39,.25)">
+      <h3>📨 יום דיווח — יום ראשון</h3>
+      <p style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px">
+        בכל בוקר יש להישקל על בטן ריקה (אחרי שירותים, לפני שתייה ואוכל). בכל יום ראשון יש לשלוח דיווח: פירוט השקילות של השבוע + ממוצע השבוע + דבר טוב אחד שקרה השבוע.
+      </p>
+      <div id="report-week-summary"></div>
+      <div class="input-field" style="margin-top:12px">
+        <label>דבר טוב אחד שקרה השבוע</label>
+        <textarea class="plain" id="report-good-thing" placeholder="למשל: הצלחתי להוסיף עוד חזרה בסקוואט..." style="min-height:70px"></textarea>
+      </div>
+      <button class="btn btn-gold" id="report-save-btn" style="margin-top:10px">💾 שמור דיווח שבועי</button>
+    </div>
+
+    <div class="card">
+      <h3>🗂 היסטוריית דיווחים</h3>
+      <div id="report-history"></div>
+    </div>
+
     <div class="card">
       <h3>📈 היסטוריית שקילות</h3>
       <div id="weighin-history"></div>
@@ -287,6 +305,17 @@ textarea.plain::placeholder{color:#5a5648;}
   <div id="measure-view" class="view">
     <div class="card" style="background:rgba(201,162,39,.06);border-color:rgba(201,162,39,.25)">
       <p style="font-size:12px;color:var(--text2);line-height:1.6">מדידות מפגישות עם קארין — פעם בחודש</p>
+    </div>
+
+    <div class="card">
+      <h3>👤 הנתונים שלי</h3>
+      <div class="input-grid">
+        <div class="input-field wide"><label>שם</label><input type="text" id="pf-name" /></div>
+        <div class="input-field"><label>גיל</label><input type="number" id="pf-age" inputmode="numeric" /></div>
+        <div class="input-field"><label>גובה (ס"מ)</label><input type="number" step="0.1" id="pf-height" inputmode="decimal" /></div>
+        <div class="input-field wide"><label>מטרות</label><input type="text" id="pf-goal" /></div>
+      </div>
+      <button class="btn btn-outline" id="pf-save-btn" style="margin-top:6px">💾 שמור נתונים</button>
     </div>
 
     <div class="card">
@@ -331,6 +360,8 @@ textarea.plain::placeholder{color:#5a5648;}
 const K_DAYS = 'mass_days_v1';
 const K_WEIGHINS = 'mass_weighins_v1';
 const K_MEASURES = 'mass_measures_v1';
+const K_REPORTS = 'mass_reports_v1';
+const K_PROFILE = 'mass_profile_v1';
 
 function loadJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; }
@@ -340,6 +371,11 @@ function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 let days = loadJSON(K_DAYS, {});           // { "DD/MM/YYYY": {method, planned:{meal:{cats}}, actual:{meal:{cats}}, fixedNotes} }
 let weighins = loadJSON(K_WEIGHINS, []);   // [{date, weight, fat, muscle, bmi, bmr, visceral, water}]
 let measures = loadJSON(K_MEASURES, []);   // [{date, weight, chest, navel, arm, waist, thigh, seat, fatpct, fold3, fold2, fold1}]
+let reports = loadJSON(K_REPORTS, []);     // [{weekStart, weekEnd, weighins:[{date,weight}], avg, goodThing, savedAt}]
+let profile = loadJSON(K_PROFILE, {        // client card, from Karin's intake form
+  name: 'ערן לפושניאן', age: 29, height: 175,
+  goal: 'רקומפוזיציה והקניית כלים לאורח חיים בריא'
+});
 
 let currentDate = new Date();
 let currentMethod = 'portions';
@@ -399,8 +435,8 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById(tab.dataset.view + '-view').classList.add('active');
     if (tab.dataset.view === 'history') renderHistory();
-    if (tab.dataset.view === 'weighin') renderWeighinHistory();
-    if (tab.dataset.view === 'measure') renderMeasureHistory();
+    if (tab.dataset.view === 'weighin') { renderWeighinHistory(); renderWeekSummary(); renderReportHistory(); }
+    if (tab.dataset.view === 'measure') { renderMeasureHistory(); loadProfileForm(); }
   });
 });
 
@@ -928,6 +964,7 @@ document.getElementById('wi-save-btn').addEventListener('click', () => {
 
   ['wi-weight','wi-fat','wi-muscle','wi-bmi','wi-bmr','wi-visceral','wi-water'].forEach(id => document.getElementById(id).value = '');
   renderWeighinHistory();
+  renderWeekSummary();
   showToast('✅ שקילה נשמרה!');
 });
 
@@ -963,6 +1000,126 @@ function renderWeighinHistory() {
 
 function toggleWi(idx) {
   document.getElementById('wi-body-'+idx).classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// WEEKLY REPORT (Sunday) — weigh-ins recap + average + one good thing
+// ═══════════════════════════════════════════
+function getWeekWeighins() {
+  // rolling 7-day window ending yesterday (the week being reported on)
+  const end = new Date(); end.setHours(0,0,0,0); end.setDate(end.getDate() - 1);
+  const start = new Date(end); start.setDate(start.getDate() - 6);
+  const list = weighins.filter(w => {
+    const d = new Date(w.date); d.setHours(0,0,0,0);
+    return d >= start && d <= end;
+  }).sort((a,b) => new Date(a.date) - new Date(b.date));
+  return { start, end, list };
+}
+
+function renderWeekSummary() {
+  const box = document.getElementById('report-week-summary');
+  if (!box) return;
+  const { start, end, list } = getWeekWeighins();
+  const fmt = d => d.toLocaleDateString('he-IL', { day:'numeric', month:'numeric' });
+  if (list.length === 0) {
+    box.innerHTML = `<div class="section-label">שקילות ${fmt(start)}–${fmt(end)}</div>
+      <div style="text-align:center;color:var(--text2);font-size:12px;padding:8px 0">אין עדיין שקילות בשבוע הזה</div>`;
+    return;
+  }
+  const avg = (list.reduce((s,w) => s + w.weight, 0) / list.length).toFixed(1);
+  box.innerHTML = `
+    <div class="section-label">שקילות ${fmt(start)}–${fmt(end)}</div>
+    ${list.map(w => `<div class="wi-row"><span>${new Date(w.date).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})}</span><span>${w.weight} ק"ג</span></div>`).join('')}
+    <div class="wi-row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:10px"><span>ממוצע השבוע</span><span style="color:var(--gold-soft);font-weight:800">${avg} ק"ג</span></div>
+  `;
+}
+
+document.getElementById('report-save-btn').addEventListener('click', () => {
+  const { start, end, list } = getWeekWeighins();
+  const goodThing = document.getElementById('report-good-thing').value.trim();
+  if (list.length === 0 && !goodThing) { alert('אין שקילות והשדה ריק — אין מה לשמור'); return; }
+  const avg = list.length ? (list.reduce((s,w) => s + w.weight, 0) / list.length).toFixed(1) : null;
+  const fmt = d => d.toLocaleDateString('he-IL');
+  reports.push({
+    weekStart: fmt(start),
+    weekEnd: fmt(end),
+    weighins: list.map(w => ({ date: w.date, weight: w.weight })),
+    avg,
+    goodThing,
+    savedAt: new Date().toISOString()
+  });
+  saveJSON(K_REPORTS, reports);
+  document.getElementById('report-good-thing').value = '';
+  renderReportHistory();
+  showToast('✅ הדיווח השבועי נשמר!');
+});
+
+function renderReportHistory() {
+  const container = document.getElementById('report-history');
+  if (!container) return;
+  if (reports.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="em-icon">📨</div><div class="em-text">עוד אין דיווחים שבועיים</div></div>`;
+    return;
+  }
+  const sorted = [...reports].reverse();
+  container.innerHTML = sorted.map((r, i) => {
+    const idx = sorted.length - 1 - i;
+    return `<div class="wi-item">
+      <div class="wi-head" onclick="toggleReport(${idx})">
+        <div class="wi-date">${r.weekStart} – ${r.weekEnd}</div>
+        <div style="text-align:left"><div class="wi-weight" style="font-size:15px">${r.avg ? 'ממוצע ' + r.avg + ' ק"ג' : '—'}</div></div>
+      </div>
+      <div class="wi-body" id="report-body-${idx}">
+        ${r.weighins.length ? r.weighins.map(w => `<div class="wi-row"><span>${new Date(w.date).toLocaleDateString('he-IL')}</span><span>${w.weight} ק"ג</span></div>`).join('') : '<div style="color:var(--text2);font-size:12px;padding:6px 0">אין שקילות שנשמרו</div>'}
+        ${r.goodThing ? `<div class="section-label">דבר טוב שקרה השבוע</div><div style="font-size:12.5px;line-height:1.6">${r.goodThing}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleReport(idx) {
+  document.getElementById('report-body-' + idx).classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// PROFILE (client card, from Karin's intake form)
+// ═══════════════════════════════════════════
+function loadProfileForm() {
+  document.getElementById('pf-name').value = profile.name || '';
+  document.getElementById('pf-age').value = profile.age || '';
+  document.getElementById('pf-height').value = profile.height || '';
+  document.getElementById('pf-goal').value = profile.goal || '';
+}
+
+document.getElementById('pf-save-btn').addEventListener('click', () => {
+  profile = {
+    name: document.getElementById('pf-name').value.trim(),
+    age: parseInt(document.getElementById('pf-age').value) || null,
+    height: parseFloat(document.getElementById('pf-height').value) || null,
+    goal: document.getElementById('pf-goal').value.trim(),
+  };
+  saveJSON(K_PROFILE, profile);
+  showToast('✅ הנתונים נשמרו!');
+});
+
+// Seed the first measurement (from Karin's intake meeting) if none saved yet
+function seedInitialMeasurement() {
+  if (measures.length > 0) return;
+  const d = new Date(2026, 8, 10); // 10/9/2026
+  measures.push({
+    date: d.toLocaleDateString('he-IL'),
+    weight: 73,
+    navel: 72.74,
+    arm: 35,
+    waist: 74,
+    thigh: 45,
+    seat: 96,
+    fatpct: 22,
+    fold3: 24.4,
+    fold2: 19.7,
+    fold1: 5.8,
+  });
+  saveJSON(K_MEASURES, measures);
 }
 
 // ═══════════════════════════════════════════
@@ -1022,6 +1179,8 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').ca
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
+seedInitialMeasurement();
+loadProfileForm();
 updateHeaderDate();
 loadCurrentDay();
 </script>
