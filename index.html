@@ -68,7 +68,7 @@ header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(1
 .custom-add-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
 .custom-add-row input{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--text);font-size:16px;font-family:'Heebo',sans-serif;outline:none;}
 .custom-add-row input[type="text"]{flex:2;min-width:100px;direction:rtl;}
-.custom-add-row input[type="number"]{width:64px;text-align:center;}
+.custom-add-row input[type="number"]{width:88px;flex-shrink:0;text-align:center;}
 .custom-add-btn{padding:0 14px;border-radius:10px;border:none;background:var(--gold);color:#1a1710;font-size:13px;cursor:pointer;font-weight:700;white-space:nowrap;font-family:'Heebo',sans-serif;}
 .custom-item-row{display:flex;align-items:center;justify-content:space-between;padding:9px 8px;border-bottom:1px solid rgba(255,255,255,0.04);gap:8px;}
 .custom-item-row .ci-name{font-size:13px;flex:1;}
@@ -784,7 +784,7 @@ function renderCatItems(catKey, mealData) {
   const addForm = `<div class="section-label">הוספת מנה שלא ברשימה</div>
     <div class="custom-add-row">
       <input type="text" id="custom-name-${catKey}" placeholder="שם המנה..." />
-      <input type="number" step="0.5" min="0.5" id="custom-qty-${catKey}" placeholder="כמות מנות" />
+      <input type="number" step="0.5" min="0.5" id="custom-qty-${catKey}" placeholder="כמות" />
       <button class="custom-add-btn" onclick="addCustomItem('${catKey}')">הוסף</button>
     </div>`;
 
