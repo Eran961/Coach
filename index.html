@@ -418,6 +418,59 @@ function sumCategory(entry, mode, cat) {
   return total;
 }
 
+// Look up a food's definition (group item or flat item) by name within a category
+function findFoodDefByName(catKey, name) {
+  const cat = FOOD_DB[catKey];
+  if (!cat) return null;
+  if (cat.groups) {
+    for (const g of cat.groups) {
+      const found = g.items.find(i => i.name === name);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (cat.items) {
+    return cat.items.find(i => (typeof i === 'string' ? i === name : i.name === name)) || null;
+  }
+  return null;
+}
+
+// Total protein/carb/fat portions across the whole day (all meals), including
+// the automatic contribution from fruit (half a carb portion each) and from
+// eating-out items (their portion-equivalents), plus any fat-bonus items.
+function computeMacroTotals(entry, mode) {
+  const totals = { protein: 0, carb: 0, fat: 0 };
+  MEALS.forEach(meal => {
+    const md = entry[mode][meal];
+    ['protein','carb','fat'].forEach(cat => {
+      (md[cat] || []).forEach(sel => {
+        const qty = sel.qty || 1;
+        totals[cat] += qty;
+        if (cat === 'protein') {
+          const def = findFoodDefByName('protein', sel.name);
+          if (def && def.fatBonus) totals.fat += def.fatBonus * qty;
+        }
+      });
+    });
+    (md.fruit || []).forEach(() => { totals.carb += (FOOD_DB.fruit.carbEq || 0.5); });
+    (md.outside || []).forEach(sel => {
+      const def = findFoodDefByName('outside', sel.name);
+      if (def) {
+        totals.protein += def.protein || 0;
+        totals.carb += def.carb || 0;
+        totals.fat += def.fat || 0;
+      }
+    });
+  });
+  return totals;
+}
+
+// Format a portion count for display: whole numbers plain, halves with one decimal
+function fmtNum(n) {
+  const r = Math.round(n * 10) / 10;
+  return Number.isInteger(r) ? String(r) : r.toFixed(1);
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -512,13 +565,14 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 // ═══════════════════════════════════════════
 function renderTargets(entry) {
   const row = document.getElementById('targets-row');
+  const totals = computeMacroTotals(entry, currentMode);
   const cats = ['protein','carb','fat'];
   row.innerHTML = cats.map(cat => {
-    const count = sumCategory(entry, currentMode, cat).reduce((s,i) => s + (i.qty||1), 0);
+    const count = totals[cat];
     const target = FOOD_DB[cat].target;
     const done = count >= target;
     return `<div class="target-box ${done?'done':''}">
-      <div class="tv" style="color:${FOOD_DB[cat].color}">${count}/${target}</div>
+      <div class="tv" style="color:${FOOD_DB[cat].color}">${fmtNum(count)}/${target}</div>
       <div class="tl">${FOOD_DB[cat].icon} ${FOOD_DB[cat].label}</div>
     </div>`;
   }).join('');
@@ -601,7 +655,9 @@ function renderCatItems(catKey, mealData) {
   if (catKey === 'fruit' || catKey === 'free' || catKey === 'outside') {
     const items = FOOD_DB[catKey].items;
     const selected = mealData[catKey] || [];
-    return items.map(it => {
+    let hint = '';
+    if (catKey === 'fruit') hint = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">כל פרי = חצי מנת פחמימה, נספר אוטומטית בסך היום</div>`;
+    return hint + items.map(it => {
       const name = typeof it === 'string' ? it : it.name;
       const note = typeof it === 'object' ? it.note : null;
       const isSelected = selected.some(s => s.name === name);
@@ -615,68 +671,27 @@ function renderCatItems(catKey, mealData) {
     }).join('');
   }
 
-  // protein / carb / fat — quantity based
-  const items = FOOD_DB[catKey].items;
+  // protein / carb / fat — grouped by heading (matching Karin's document), quantity based
   const selected = mealData[catKey] || [];
-  let html = items.map(it => {
-    const sel = selected.find(s => s.name === it.name);
-    const qty = sel ? sel.qty : 0;
-    return `<div class="food-item">
-      <div class="food-name">${it.name}</div>
-      <div class="fi-controls">
-        <button class="qty-btn" onclick="changeQty('${catKey}','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
-        <span class="qty-val">${qty}</span>
-        <button class="qty-btn" onclick="changeQty('${catKey}','${it.name.replace(/'/g,"\\'")}',1)">+</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  if (catKey === 'protein' && FOOD_DB.protein.halfPlusFat) {
-    html += `<div class="section-label">חלבון + חצי שומן</div>`;
-    html += FOOD_DB.protein.halfPlusFat.map(it => {
+  const groups = FOOD_DB[catKey].groups || [];
+  return groups.map(g => {
+    const rows = g.items.map(it => {
       const sel = selected.find(s => s.name === it.name);
       const qty = sel ? sel.qty : 0;
       return `<div class="food-item">
-        <div><div class="food-name">${it.name}</div><div style="font-size:10.5px;color:var(--text2)">${it.note}</div></div>
+        <div>
+          <div class="food-name">${it.name}</div>
+          ${it.note ? `<div style="font-size:10.5px;color:var(--text2);margin-top:2px">${it.note}</div>` : ''}
+        </div>
         <div class="fi-controls">
-          <button class="qty-btn" onclick="changeQty('protein','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
+          <button class="qty-btn" onclick="changeQty('${catKey}','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
           <span class="qty-val">${qty}</span>
-          <button class="qty-btn" onclick="changeQty('protein','${it.name.replace(/'/g,"\\'")}',1)">+</button>
+          <button class="qty-btn" onclick="changeQty('${catKey}','${it.name.replace(/'/g,"\\'")}',1)">+</button>
         </div>
       </div>`;
     }).join('');
-  }
-
-  if (catKey === 'carb') {
-    if (FOOD_DB.carb.soups) {
-      html += `<div class="section-label">מרקים</div>`;
-      html += FOOD_DB.carb.soups.map(it => {
-        const sel = selected.find(s => s.name === it.name);
-        const qty = sel ? sel.qty : 0;
-        return `<div class="food-item"><div class="food-name">${it.name}</div>
-          <div class="fi-controls">
-            <button class="qty-btn" onclick="changeQty('carb','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
-            <span class="qty-val">${qty}</span>
-            <button class="qty-btn" onclick="changeQty('carb','${it.name.replace(/'/g,"\\'")}',1)">+</button>
-          </div></div>`;
-      }).join('');
-    }
-    if (FOOD_DB.carb.misc) {
-      html += `<div class="section-label">שונות</div>`;
-      html += FOOD_DB.carb.misc.map(it => {
-        const sel = selected.find(s => s.name === it.name);
-        const qty = sel ? sel.qty : 0;
-        return `<div class="food-item"><div class="food-name">${it.name}</div>
-          <div class="fi-controls">
-            <button class="qty-btn" onclick="changeQty('carb','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
-            <span class="qty-val">${qty}</span>
-            <button class="qty-btn" onclick="changeQty('carb','${it.name.replace(/'/g,"\\'")}',1)">+</button>
-          </div></div>`;
-      }).join('');
-    }
-  }
-
-  return html;
+    return `<div class="section-label">${g.label}</div>${rows}`;
+  }).join('');
 }
 
 function toggleCat(catKey) {
@@ -857,10 +872,8 @@ document.getElementById('clear-day-btn').addEventListener('click', () => {
 // HISTORY VIEW
 // ═══════════════════════════════════════════
 function summarizeDay(entry, mode) {
-  const p = sumCategory(entry, mode, 'protein').reduce((s,i)=>s+(i.qty||1),0);
-  const c = sumCategory(entry, mode, 'carb').reduce((s,i)=>s+(i.qty||1),0);
-  const f = sumCategory(entry, mode, 'fat').reduce((s,i)=>s+(i.qty||1),0);
-  return `חלבון ${p}/6 • פחמימה ${c}/4 • שומן ${f}/3`;
+  const t = computeMacroTotals(entry, mode);
+  return `חלבון ${fmtNum(t.protein)}/6 • פחמימה ${fmtNum(t.carb)}/4 • שומן ${fmtNum(t.fat)}/3`;
 }
 
 function dayHasData(entry, mode) {
