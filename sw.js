@@ -1,5 +1,5 @@
-const CACHE_NAME = 'coach-v1';
-const ASSETS = ['./index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE_NAME = 'mass-app-v1';
+const ASSETS = ['./index.html', './manifest.json', './food-db.js', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
@@ -14,8 +14,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // API calls - always network
-  if (e.request.url.includes('anthropic.com')) return;
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );

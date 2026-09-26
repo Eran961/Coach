@@ -1,1439 +1,1029 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>קוצ' אישי</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#63b3ed" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="קוצ' שלי" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>מסה | ערן</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#c9a227" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#15140f; --bg2:#1c1a14; --panel:#221f18;
+  --gold:#c9a227; --gold-soft:#e8c76a;
+  --meat:#c1666b; --carb:#d19a4a; --oil:#8fae5d; --veg:#5f9c7a;
+  --text:#f2ede1; --text2:#a89f8c; --line:rgba(201,162,39,.16);
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;overflow:hidden;}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:720px;margin:0 auto;position:relative;}
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── HEADER ── */
+header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(180deg,var(--bg2),var(--bg));border-bottom:1px solid var(--line);flex-shrink:0;}
+.h-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
+.h-title{font-size:19px;font-weight:800;letter-spacing:.3px;}
+.h-title span{color:var(--gold-soft);}
+.h-date{font-size:12px;color:var(--text2);}
 
-    :root {
-      --bg: #0c0c18;
-      --bg2: #131324;
-      --bg3: #1a1a2e;
-      --accent: #63b3ed;
-      --accent2: #9f7aea;
-      --green: #48bb78;
-      --red: #fc8181;
-      --text: #e2e8f0;
-      --text2: #94a3b8;
-      --border: rgba(99,179,237,0.15);
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-    }
+/* ── TABS ── */
+#tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--line);flex-shrink:0;padding:0 6px;}
+.tab{flex:1;padding:13px 4px 11px;text-align:center;font-size:12.5px;color:var(--text2);border:none;background:none;font-family:'Heebo',sans-serif;cursor:pointer;position:relative;font-weight:500;}
+.tab.active{color:var(--gold-soft);font-weight:700;}
+.tab.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--gold);border-radius:2px;}
 
-    html, body { height: 100%; overflow: hidden; font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); }
+/* ── VIEWS ── */
+.view{display:none;flex:1;overflow-y:auto;padding:16px 16px calc(var(--safe-b) + 16px);}
+.view.active{display:block;}
+.view::-webkit-scrollbar{width:3px;}
+.view::-webkit-scrollbar-thumb{background:rgba(201,162,39,.25);border-radius:4px;}
 
-    /* ── SCREENS ── */
-    .screen { display: none; flex-direction: column; height: 100dvh; max-width: 700px; margin: 0 auto; }
-    .screen.active { display: flex; }
+/* ── CARD ── */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+.card h3{font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600;letter-spacing:.2px;}
 
-    /* ── HEADER ── */
-    header {
-      display: flex; align-items: center; gap: 12px;
-      padding: calc(var(--safe-top) + 14px) 16px 14px;
-      background: rgba(12,12,24,0.95); backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 10;
-    }
-    .avatar {
-      width: 42px; height: 42px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-      box-shadow: 0 0 16px rgba(99,179,237,0.35);
-    }
-    .header-info { flex: 1; }
-    .header-info h1 { font-size: 16px; font-weight: 700; }
-    .header-info p  { font-size: 11px; color: var(--accent); margin-top: 1px; }
-    .header-actions { display: flex; gap: 8px; }
-    .icon-btn {
-      width: 34px; height: 34px; border-radius: 50%;
-      border: 1px solid var(--border); background: rgba(255,255,255,0.04);
-      color: var(--text2); font-size: 15px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; transition: all .2s;
-    }
-    .icon-btn:active { background: rgba(99,179,237,0.2); color: var(--accent); }
+/* ── DATE NAV ── */
+.date-nav{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.date-nav button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:17px;cursor:pointer;flex-shrink:0;}
+.date-nav .lbl{flex:1;text-align:center;font-size:14.5px;font-weight:700;}
+.date-nav .lbl small{display:block;font-size:11px;color:var(--text2);font-weight:400;margin-top:1px;}
+.today-btn{padding:7px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(201,162,39,.1);color:var(--gold-soft);font-size:11.5px;cursor:pointer;font-family:'Heebo',sans-serif;flex-shrink:0;}
 
-    /* ── BOTTOM NAV ── */
-    #bottom-nav {
-      display: flex; flex-shrink: 0;
-      background: rgba(12,12,24,0.97); border-top: 1px solid var(--border);
-      padding-bottom: var(--safe-bottom);
-    }
-    .nav-btn {
-      flex: 1; padding: 10px 0; border: none; background: none;
-      color: var(--text2); font-family: 'Heebo', sans-serif;
-      font-size: 10px; cursor: pointer; display: flex;
-      flex-direction: column; align-items: center; gap: 3px; transition: color .2s;
-    }
-    .nav-btn .nav-icon { font-size: 20px; }
-    .nav-btn.active { color: var(--accent); }
+/* ── METHOD SWITCH ── */
+.method-switch{display:flex;background:var(--bg2);border-radius:12px;padding:3px;margin-bottom:12px;border:1px solid var(--line);}
+.method-btn{flex:1;padding:9px 4px;text-align:center;border:none;background:none;color:var(--text2);font-size:12.5px;border-radius:9px;cursor:pointer;font-family:'Heebo',sans-serif;font-weight:600;transition:all .2s;}
+.method-btn.active{background:var(--gold);color:#1a1710;}
 
-    /* ── MESSAGES ── */
-    #messages {
-      flex: 1; overflow-y: auto; padding: 16px 12px;
-      display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth;
-    }
-    #messages::-webkit-scrollbar { width: 3px; }
-    #messages::-webkit-scrollbar-thumb { background: rgba(99,179,237,0.2); border-radius: 4px; }
+/* ── MODE SWITCH (planned/actual) ── */
+.mode-switch{display:flex;gap:8px;margin-bottom:14px;}
+.mode-btn{flex:1;padding:10px 4px;text-align:center;border:1.5px solid var(--line);background:var(--panel);color:var(--text2);font-size:13px;border-radius:12px;cursor:pointer;font-family:'Heebo',sans-serif;font-weight:700;transition:all .2s;}
+.mode-btn.active{border-color:var(--gold);background:rgba(201,162,39,.12);color:var(--gold-soft);}
 
-    .msg-row { display: flex; animation: fadeUp .25s ease; }
-    .msg-row.user { justify-content: flex-start; }
-    .msg-row.ai   { justify-content: flex-end; }
-    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+/* ── MEAL TABS ── */
+.meal-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px;scrollbar-width:none;}
+.meal-tabs::-webkit-scrollbar{display:none;}
+.meal-tab{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid var(--line);background:var(--panel);color:var(--text2);font-size:12.5px;cursor:pointer;font-family:'Heebo',sans-serif;font-weight:600;white-space:nowrap;position:relative;}
+.meal-tab.active{background:var(--gold);color:#1a1710;border-color:var(--gold);}
+.meal-tab .mt-count{font-size:9px;opacity:.75;margin-right:3px;}
 
-    .bubble { max-width: 84%; padding: 11px 15px; font-size: 14.5px; line-height: 1.65; word-break: break-word; }
-    .msg-row.user .bubble { background: linear-gradient(135deg,#2563eb,#4f46e5); border-radius: 18px 18px 4px 18px; color:#fff; }
-    .msg-row.ai .bubble   { background: rgba(255,255,255,0.055); border: 1px solid var(--border); border-radius: 18px 18px 18px 4px; backdrop-filter: blur(8px); }
-    .bubble strong { color: #93c5fd; }
+/* ── PROGRESS RINGS ── */
+.targets-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.target-box{background:var(--bg2);border-radius:12px;padding:10px 4px;text-align:center;border:1px solid var(--line);}
+.target-box .tv{font-size:17px;font-weight:800;}
+.target-box .tl{font-size:10px;color:var(--text2);margin-top:1px;}
+.target-box.done{border-color:rgba(143,174,93,.4);background:rgba(143,174,93,.08);}
 
-    .date-sep { text-align:center; font-size:11px; color:var(--text2); margin:6px 0; opacity:.7; }
+/* ── CATEGORY SECTION ── */
+.cat-section{margin-bottom:10px;border-radius:14px;overflow:hidden;border:1px solid var(--line);}
+.cat-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:var(--panel);}
+.cat-head .ch-left{display:flex;align-items:center;gap:10px;}
+.cat-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.cat-name{font-size:14px;font-weight:700;}
+.cat-count{font-size:12px;color:var(--text2);}
+.cat-arrow{font-size:14px;color:var(--text2);transition:transform .2s;}
+.cat-body{display:none;background:var(--bg2);padding:10px 12px;}
+.cat-body.open{display:block;}
 
-    .typing { display:flex; gap:5px; align-items:center; padding:14px 16px; }
-    .typing span { width:7px; height:7px; border-radius:50%; background:var(--accent); animation:bounce .9s infinite; }
-    .typing span:nth-child(2) { animation-delay:.15s; }
-    .typing span:nth-child(3) { animation-delay:.3s; }
-    @keyframes bounce { 0%,100%{transform:translateY(0);opacity:.5;} 50%{transform:translateY(-5px);opacity:1;} }
+.food-item{display:flex;align-items:center;justify-content:space-between;padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.04);gap:10px;}
+.food-item:last-child{border-bottom:none;}
+.food-name{font-size:13px;line-height:1.4;flex:1;}
+.food-item .fi-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.qty-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qty-val{min-width:16px;text-align:center;font-size:13px;font-weight:700;}
 
-    /* ── QUICK ACTIONS ── */
-    #quick-wrap { padding: 8px 12px 4px; flex-shrink:0; border-top:1px solid var(--border); background:rgba(12,12,24,0.7); backdrop-filter:blur(10px); }
-    #quick-wrap p { font-size:10px; color:var(--text2); text-align:center; margin-bottom:6px; }
-    #quick-scroll { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
-    #quick-scroll::-webkit-scrollbar { display:none; }
-    .chip { flex-shrink:0; padding:6px 13px; border-radius:20px; border:1px solid rgba(99,179,237,0.28); background:rgba(99,179,237,0.07); color:#93c5fd; font-size:12px; font-family:'Heebo',sans-serif; cursor:pointer; white-space:nowrap; transition:all .18s; }
-    .chip:active { background:rgba(99,179,237,0.22); transform:scale(.96); }
+/* ── SELECTED SUMMARY ── */
+.selected-list{display:flex;flex-direction:column;gap:6px;}
+.sel-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:10px;padding:9px 12px;}
+.sel-row .sr-text{font-size:12.5px;flex:1;}
+.sel-row .sr-cat{font-size:10px;color:var(--text2);margin-top:1px;}
+.sel-row button{background:none;border:none;color:#c1666b;font-size:15px;cursor:pointer;padding:2px 6px;}
 
-    /* ── INPUT ── */
-    #input-bar { display:flex; align-items:flex-end; gap:8px; padding:10px 12px calc(var(--safe-bottom) + 10px); background:rgba(12,12,24,0.92); backdrop-filter:blur(14px); border-top:1px solid var(--border); flex-shrink:0; }
-    #input { flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(99,179,237,0.2); border-radius:22px; padding:11px 16px; color:var(--text); font-size:15px; font-family:'Heebo',sans-serif; resize:none; outline:none; line-height:1.45; max-height:120px; min-height:44px; direction:rtl; transition:border .2s; }
-    #input:focus { border-color:rgba(99,179,237,0.55); }
-    #input::placeholder { color:#4a5568; }
-    #send-btn { width:44px; height:44px; border-radius:50%; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; box-shadow:0 4px 14px rgba(99,179,237,0.35); }
-    #send-btn:disabled { background:rgba(99,179,237,0.18); box-shadow:none; cursor:not-allowed; }
-    #send-btn:not(:disabled):active { transform:scale(.92); }
+/* ── ACTUAL/PLANNED TEXTAREAS ── */
+textarea.plain{width:100%;min-height:90px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;color:var(--text);font-size:13.5px;font-family:'Heebo',sans-serif;resize:none;outline:none;direction:rtl;line-height:1.6;}
+textarea.plain:focus{border-color:var(--gold);}
+textarea.plain::placeholder{color:#5a5648;}
 
-    /* ── PROFILE SCREEN ── */
-    #profile-screen { overflow-y: auto; }
-    .profile-body { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:14px; }
+/* ── BUTTONS ── */
+.btn{display:block;width:100%;padding:13px;border-radius:12px;border:none;font-size:14.5px;font-weight:700;font-family:'Heebo',sans-serif;cursor:pointer;text-align:center;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-soft));color:#1a1710;}
+.btn-outline{background:none;border:1px solid var(--line);color:var(--text);}
+.btn-ghost{background:var(--bg2);color:var(--text2);border:1px solid var(--line);}
+.btn-row{display:flex;gap:8px;}
+.btn-row .btn{flex:1;}
 
-    .card { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:16px; padding:16px; }
-    .card h3 { font-size:13px; color:var(--text2); margin-bottom:12px; letter-spacing:.5px; }
+/* ── FIXED MENU DISPLAY ── */
+.meal-block{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;background:var(--panel);}
+.meal-block h4{font-size:13.5px;color:var(--gold-soft);margin-bottom:8px;font-weight:700;}
+.meal-block ul{padding-right:18px;}
+.meal-block li{font-size:12.5px;line-height:1.7;color:var(--text);margin-bottom:2px;}
 
-    .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .stat-box { background:rgba(99,179,237,0.07); border:1px solid rgba(99,179,237,0.15); border-radius:12px; padding:12px; text-align:center; }
-    .stat-box .val { font-size:22px; font-weight:700; color:var(--accent); }
-    .stat-box .lbl { font-size:11px; color:var(--text2); margin-top:2px; }
+/* ── RULES LIST ── */
+.rules-list{padding-right:0;list-style:none;}
+.rules-list li{font-size:12px;line-height:1.7;color:var(--text2);padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);position:relative;padding-right:20px;}
+.rules-list li::before{content:'•';position:absolute;right:0;color:var(--gold);font-weight:900;}
+.rules-list li:last-child{border-bottom:none;}
 
-    .input-row { display:flex; flex-direction:column; gap:5px; margin-bottom:10px; }
-    .input-row label { font-size:12px; color:var(--text2); }
-    .input-row input, .input-row select {
-      background:rgba(255,255,255,0.06); border:1px solid rgba(99,179,237,0.2);
-      border-radius:10px; padding:10px 14px; color:var(--text);
-      font-size:15px; font-family:'Heebo',sans-serif; outline:none; direction:rtl; width:100%;
-    }
-    .input-row input:focus, .input-row select:focus { border-color:rgba(99,179,237,0.5); }
-    .input-row select option { background:#1a1a2e; }
+/* ── HISTORY LIST ── */
+.hist-item{border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:9px;background:var(--panel);cursor:pointer;}
+.hist-item .hi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.hist-item .hi-date{font-size:13px;font-weight:700;}
+.hist-item .hi-badge{font-size:10.5px;padding:3px 9px;border-radius:10px;background:rgba(201,162,39,.12);color:var(--gold-soft);}
+.hist-item .hi-summary{font-size:11.5px;color:var(--text2);}
+.hist-item .hi-status{display:flex;gap:6px;margin-top:8px;}
+.status-chip{font-size:10px;padding:3px 8px;border-radius:8px;}
+.status-chip.match{background:rgba(143,174,93,.15);color:#a8cf8a;}
+.status-chip.diff{background:rgba(193,102,107,.15);color:#e29ba0;}
+.status-chip.pending{background:rgba(255,255,255,.06);color:var(--text2);}
 
-    .btn-primary { width:100%; padding:13px; border-radius:12px; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:15px; font-family:'Heebo',sans-serif; font-weight:600; cursor:pointer; transition:opacity .2s; }
-    .btn-primary:active { opacity:.8; }
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:50px 20px;color:var(--text2);}
+.empty .em-icon{font-size:38px;margin-bottom:10px;}
+.empty .em-text{font-size:13px;line-height:1.6;}
 
-    /* ── WEIGH-IN SCREEN ── */
-    #weighin-screen { overflow-y:auto; }
-    .weighin-body { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:14px; }
+/* ── WEIGHIN FORM ── */
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
+.input-field{display:flex;flex-direction:column;gap:5px;}
+.input-field label{font-size:11px;color:var(--text2);}
+.input-field input{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-family:'Heebo',sans-serif;outline:none;text-align:center;}
+.input-field input:focus{border-color:var(--gold);}
+.input-field.wide{grid-column:span 2;}
 
-    .weigh-entry-form { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:16px; padding:16px; }
-    .weigh-entry-form h3 { font-size:13px; color:var(--text2); margin-bottom:12px; }
+.big-num-input{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.big-num-input input{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px;color:var(--text);font-size:30px;font-weight:800;font-family:'Heebo',sans-serif;outline:none;text-align:center;}
+.big-num-input .unit{font-size:15px;color:var(--text2);}
 
-    .big-input-wrap { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
-    .big-input { flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(99,179,237,0.25); border-radius:14px; padding:14px 18px; color:var(--text); font-size:28px; font-weight:700; font-family:'Heebo',sans-serif; outline:none; text-align:center; width:100%; }
-    .big-input:focus { border-color:var(--accent); }
-    .unit-lbl { font-size:16px; color:var(--text2); flex-shrink:0; }
+/* ── WEIGHIN HISTORY ── */
+.wi-item{border:1px solid var(--line);border-radius:14px;margin-bottom:9px;overflow:hidden;background:var(--panel);}
+.wi-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;cursor:pointer;}
+.wi-date{font-size:12px;color:var(--text2);}
+.wi-weight{font-size:19px;font-weight:800;color:var(--gold-soft);}
+.wi-delta{font-size:11px;margin-top:2px;}
+.delta-up{color:#a8cf8a;}
+.delta-down{color:#e29ba0;}
+.wi-body{display:none;padding:0 15px 14px;border-top:1px solid var(--line);}
+.wi-body.open{display:block;}
+.wi-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12.5px;}
+.wi-row span:first-child{color:var(--text2);}
+.wi-row span:last-child{font-weight:600;}
 
-    .optional-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
-    .opt-field { display:flex; flex-direction:column; gap:4px; }
-    .opt-field label { font-size:11px; color:var(--text2); }
-    .opt-field input { background:rgba(255,255,255,0.06); border:1px solid rgba(99,179,237,0.18); border-radius:10px; padding:9px 12px; color:var(--text); font-size:14px; font-family:'Heebo',sans-serif; outline:none; text-align:center; }
-    .opt-field input:focus { border-color:rgba(99,179,237,0.5); }
+/* ── TOAST ── */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--gold);color:#1a1710;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;}
 
-    /* history list */
-    .history-list { display:flex; flex-direction:column; gap:8px; }
-    .history-item {
-      display:flex; align-items:center; justify-content:space-between;
-      background:rgba(255,255,255,0.04); border:1px solid var(--border);
-      border-radius:12px; padding:12px 16px;
-    }
-    .history-item .hi-date { font-size:12px; color:var(--text2); }
-    .history-item .hi-weight { font-size:18px; font-weight:700; color:var(--text); }
-    .history-item .hi-delta { font-size:12px; font-weight:600; margin-top:1px; }
-    .history-item .hi-extras { font-size:11px; color:var(--text2); margin-top:2px; }
-    .delta-down { color: var(--green); }
-    .delta-up   { color: var(--red); }
-    .delta-same { color: var(--text2); }
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--panel);border-radius:20px 20px 0 0;padding:20px 18px calc(var(--safe-b) + 20px);width:100%;max-width:720px;max-height:80vh;overflow-y:auto;}
+.modal-box h3{font-size:16px;margin-bottom:14px;text-align:center;}
 
-    .empty-state { text-align:center; padding:40px 20px; color:var(--text2); font-size:14px; }
-    .empty-state .big-emoji { font-size:40px; margin-bottom:12px; }
-
-    /* ── OVERLAYS ── */
-    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:200; align-items:center; justify-content:center; }
-    .overlay.show { display:flex; }
-    .modal { background:var(--bg3); border:1px solid var(--border); border-radius:18px; padding:24px 20px; max-width:300px; width:90%; text-align:center; }
-    .modal h3 { font-size:16px; margin-bottom:8px; }
-    .modal p  { font-size:13px; color:var(--text2); margin-bottom:20px; }
-    .modal-btns { display:flex; gap:10px; }
-    .modal-btns button { flex:1; padding:10px; border-radius:12px; border:none; font-size:14px; font-family:'Heebo',sans-serif; cursor:pointer; }
-    .btn-cancel { background:rgba(255,255,255,0.08); color:var(--text); }
-    .btn-danger { background:#e53e3e; color:#fff; }
-
-    /* setup overlay */
-    #setup-overlay { align-items: flex-end; }
-    #setup-overlay .modal { max-width:100%; width:100%; border-radius:20px 20px 0 0; padding:24px 20px calc(var(--safe-bottom) + 24px); max-height:90vh; overflow-y:auto; text-align:right; }
-    #setup-overlay .modal h3 { text-align:center; font-size:18px; margin-bottom:4px; }
-    #setup-overlay .modal .sub { text-align:center; font-size:13px; color:var(--text2); margin-bottom:20px; }
-
-    .progress-dots { display:flex; justify-content:center; gap:6px; margin-bottom:20px; }
-    .dot { width:8px; height:8px; border-radius:50%; background:rgba(99,179,237,0.25); transition:background .3s; }
-    .dot.active { background:var(--accent); }
-  </style>
+.section-label{font-size:11px;color:var(--text2);margin:14px 0 8px;font-weight:600;}
+.section-label:first-child{margin-top:0;}
+</style>
 </head>
 <body>
 
-<!-- ══════════════ CHAT SCREEN ══════════════ -->
-<div id="chat-screen" class="screen active">
+<div id="app">
   <header>
-    <div class="avatar">💪</div>
-    <div class="header-info">
-      <h1 id="header-name">קוצ' אישי</h1>
-      <p id="header-sub">כושר &amp; תזונה • AI</p>
+    <div class="h-top">
+      <div class="h-title">💪 <span>מסה</span> נקייה</div>
     </div>
-    <div class="header-actions">
-      <button class="icon-btn" id="clear-btn" title="נקה שיחה">🗑</button>
-    </div>
+    <div class="h-date" id="today-label"></div>
   </header>
 
-  <div id="messages"></div>
-
-  <!-- Today / Tomorrow buttons -->
-  <div style="display:flex;gap:8px;padding:8px 12px 0;flex-shrink:0;">
-    <button id="btn-today-menu" style="flex:1;padding:9px;border-radius:12px;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:13px;font-family:Heebo,sans-serif;cursor:pointer;font-weight:600;">📋 תפריט היום</button>
-    <button id="btn-tomorrow-menu" style="flex:1;padding:9px;border-radius:12px;border:1px solid rgba(159,122,234,0.3);background:rgba(159,122,234,0.08);color:#c4b5fd;font-size:13px;font-family:Heebo,sans-serif;cursor:pointer;font-weight:600;">🌅 תפריט למחר</button>
-  </div>
-
-  <div id="input-bar">
-    <input type="file" id="img-input-gallery" accept="image/*" style="display:none" />
-    <input type="file" id="img-input-camera" accept="image/*" capture="environment" style="display:none" />
-    <button id="gallery-btn" title="העלה תמונה" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🖼️</button>
-    <button id="camera-btn" title="צלם תמונה" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📷</button>
-    <textarea id="input" placeholder="ספר לי על היום שלך..." rows="1"></textarea>
-    <button id="send-btn" disabled>➤</button>
-  </div>
-
-  <nav id="bottom-nav">
-    <button class="nav-btn active" data-screen="chat">
-      <span class="nav-icon">💬</span>צ'אט
-    </button>
-    <button class="nav-btn" data-screen="menulog">
-      <span class="nav-icon">📅</span>היסטוריה
-    </button>
-    <button class="nav-btn" data-screen="weighin">
-      <span class="nav-icon">⚖️</span>שקילה
-    </button>
-    <button class="nav-btn" data-screen="profile">
-      <span class="nav-icon">👤</span>פרופיל
-    </button>
+  <nav id="tabs">
+    <button class="tab active" data-view="menu">תפריט יומי</button>
+    <button class="tab" data-view="history">היסטוריה</button>
+    <button class="tab" data-view="weighin">שקילה</button>
+    <button class="tab" data-view="measure">מדדים</button>
   </nav>
-</div>
 
-<!-- ══════════════ WEIGH-IN SCREEN ══════════════ -->
-<div id="weighin-screen" class="screen">
-  <header>
-    <div class="avatar">⚖️</div>
-    <div class="header-info">
-      <h1>שקילה שבועית</h1>
-      <p>עדכן נתונים מ-Renpho</p>
+  <!-- ═══════════ MENU VIEW ═══════════ -->
+  <div id="menu-view" class="view active">
+
+    <div class="date-nav">
+      <button id="menu-prev">‹</button>
+      <div class="lbl" id="menu-date-lbl">היום<small id="menu-date-sub"></small></div>
+      <button id="menu-next">›</button>
+      <button class="today-btn" id="menu-today-btn">היום</button>
     </div>
-  </header>
 
-  <div class="weighin-body">
-    <!-- Renpho screenshot upload -->
+    <div class="method-switch">
+      <button class="method-btn active" data-method="portions">📊 לפי מנות</button>
+      <button class="method-btn" data-method="fixed">📋 תפריט קבוע</button>
+    </div>
+
+    <!-- PLANNED / ACTUAL MODE SWITCH -->
+    <div class="mode-switch" id="mode-switch">
+      <button class="mode-btn active" data-mode="planned">📝 מה תכננתי</button>
+      <button class="mode-btn" data-mode="actual">✅ מה אכלתי בפועל</button>
+    </div>
+
+    <!-- PORTIONS METHOD -->
+    <div id="portions-panel">
+      <!-- MEAL TIME TABS -->
+      <div class="meal-tabs" id="meal-tabs"></div>
+
+      <div class="targets-row" id="targets-row"></div>
+      <div id="categories-container"></div>
+    </div>
+
+    <!-- FIXED METHOD -->
+    <div id="fixed-panel" style="display:none">
+      <div class="card" style="background:rgba(201,162,39,.06);border-color:rgba(201,162,39,.25)">
+        <p style="font-size:12px;color:var(--text2);line-height:1.6">התפריט הקבוע של קארין — ניתן לחבר, לחלק או להחליף בין הארוחות לפי העדפה</p>
+      </div>
+      <div id="fixed-menu-container"></div>
+    </div>
+
+    <div class="card" id="day-summary-card">
+      <h3 id="day-summary-title">📋 סיכום היום — מתוכנן</h3>
+      <div id="day-summary-body"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-gold" id="save-day-btn">💾 שמור יום</button>
+      <button class="btn btn-ghost" id="clear-day-btn">🗑 נקה ארוחה זו</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ HISTORY VIEW ═══════════ -->
+  <div id="history-view" class="view">
     <div class="card">
-      <h3>📸 העלה צילום מסך מ-Renpho</h3>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">הקוצ' יקרא את כל המדדים אוטומטית ויעדכן את הפרופיל שלך</p>
-      <input type="file" id="renpho-input" accept="image/*" style="display:none" />
-      <input type="file" id="renpho-camera" accept="image/*" capture="environment" style="display:none" />
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <button id="renpho-gallery-btn" class="btn-primary" style="flex:1;background:linear-gradient(135deg,#48bb78,#38a169)">🖼️ מהגלריה</button>
-        <button id="renpho-camera-btn" class="btn-primary" style="flex:1">📷 צלם עכשיו</button>
-      </div>
-      <div id="renpho-preview" style="display:none;margin-bottom:10px">
-        <img id="renpho-img" style="width:100%;border-radius:10px;max-height:200px;object-fit:contain" />
-      </div>
-      <div id="renpho-status" style="font-size:13px;color:var(--accent);text-align:center;min-height:20px"></div>
+      <h3>📆 כל הימים</h3>
+      <div id="history-list"></div>
     </div>
+  </div>
 
-    <div class="weigh-entry-form card">
-      <h3>📥 עדכון ידני</h3>
-      <div class="big-input-wrap">
-        <input class="big-input" id="wi-weight" type="number" step="0.1" placeholder="75.0" inputmode="decimal" />
-        <span class="unit-lbl">ק"ג</span>
+  <!-- ═══════════ WEIGHIN VIEW ═══════════ -->
+  <div id="weighin-view" class="view">
+    <div class="card">
+      <h3>⚖️ שקילה חדשה</h3>
+      <div class="big-num-input">
+        <input type="number" step="0.1" id="wi-weight" placeholder="0.0" inputmode="decimal" />
+        <span class="unit">ק"ג</span>
       </div>
-      <div class="optional-fields">
-        <div class="opt-field">
-          <label>% שומן</label>
-          <input id="wi-fat" type="number" step="0.1" placeholder="—" inputmode="decimal" />
-        </div>
-        <div class="opt-field">
-          <label>% שריר</label>
-          <input id="wi-muscle" type="number" step="0.1" placeholder="—" inputmode="decimal" />
-        </div>
+      <div class="input-grid">
+        <div class="input-field"><label>% שומן</label><input type="number" step="0.1" id="wi-fat" inputmode="decimal" /></div>
+        <div class="input-field"><label>% שריר / מסת שריר</label><input type="number" step="0.1" id="wi-muscle" inputmode="decimal" /></div>
+        <div class="input-field"><label>BMI</label><input type="number" step="0.1" id="wi-bmi" inputmode="decimal" /></div>
+        <div class="input-field"><label>BMR (קק"ל)</label><input type="number" id="wi-bmr" inputmode="numeric" /></div>
+        <div class="input-field"><label>שומן קרביים</label><input type="number" step="0.1" id="wi-visceral" inputmode="decimal" /></div>
+        <div class="input-field"><label>% מים בגוף</label><input type="number" step="0.1" id="wi-water" inputmode="decimal" /></div>
       </div>
-      <button class="btn-primary" id="wi-save-btn">💾 שמור ועדכן את הקוצ'</button>
+      <button class="btn btn-gold" id="wi-save-btn" style="margin-top:6px">💾 שמור שקילה</button>
     </div>
 
     <div class="card">
       <h3>📈 היסטוריית שקילות</h3>
-      <div class="history-list" id="weighin-history"></div>
+      <div id="weighin-history"></div>
     </div>
   </div>
 
-  <nav id="bottom-nav-2" class="bottom-nav-clone">
-    <button class="nav-btn" data-screen="chat"><span class="nav-icon">💬</span>צ'אט</button>
-    <button class="nav-btn" data-screen="menulog"><span class="nav-icon">📅</span>היסטוריה</button>
-    <button class="nav-btn active" data-screen="weighin"><span class="nav-icon">⚖️</span>שקילה</button>
-    <button class="nav-btn" data-screen="profile"><span class="nav-icon">👤</span>פרופיל</button>
-  </nav>
-</div>
-
-<!-- ══════════════ PROFILE SCREEN ══════════════ -->
-<div id="profile-screen" class="screen">
-  <header>
-    <div class="avatar">👤</div>
-    <div class="header-info">
-      <h1>הפרופיל שלי</h1>
-      <p>נתונים אישיים ויעדים</p>
-    </div>
-  </header>
-
-  <div class="profile-body">
-    <!-- Stats summary -->
-    <div class="card" id="stats-card">
-      <h3>📊 נתונים נוכחיים</h3>
-      <div class="stat-grid" id="stats-grid">
-        <div class="stat-box"><div class="val" id="stat-weight">—</div><div class="lbl">משקל (ק"ג)</div></div>
-        <div class="stat-box"><div class="val" id="stat-fat">—</div><div class="lbl">% שומן</div></div>
-        <div class="stat-box"><div class="val" id="stat-cal">—</div><div class="lbl">קלוריות/יום</div></div>
-        <div class="stat-box"><div class="val" id="stat-protein">—</div><div class="lbl">חלבון (גרם/יום)</div></div>
-      </div>
+  <!-- ═══════════ MEASUREMENTS VIEW ═══════════ -->
+  <div id="measure-view" class="view">
+    <div class="card" style="background:rgba(201,162,39,.06);border-color:rgba(201,162,39,.25)">
+      <p style="font-size:12px;color:var(--text2);line-height:1.6">מדידות מפגישות עם קארין — פעם בחודש</p>
     </div>
 
-    <!-- Edit form -->
     <div class="card">
-      <h3>✏️ עריכת פרטים</h3>
-      <div class="input-row"><label>שם</label><input id="p-name" type="text" placeholder="ערן" /></div>
-      <div class="input-row"><label>גיל</label><input id="p-age" type="number" placeholder="30" inputmode="numeric" /></div>
-      <div class="input-row"><label>גובה (ס"מ)</label><input id="p-height" type="number" placeholder="175" inputmode="numeric" /></div>
-      <div class="input-row"><label>משקל נוכחי (ק"ג)</label><input id="p-weight" type="number" step="0.1" placeholder="80" inputmode="decimal" /></div>
-      <div class="input-row"><label>% שומן נוכחי (מ-Renpho)</label><input id="p-fat" type="number" step="0.1" placeholder="20" inputmode="decimal" /></div>
-      <div class="input-row"><label>יעד % שומן</label><input id="p-goal-fat" type="number" step="0.1" placeholder="15" inputmode="decimal" /></div>
-      <div class="input-row">
-        <label>רמת פעילות (מחוץ לאימונים)</label>
-        <select id="p-activity">
-          <option value="sedentary">בעיקר יושב (משרד/בית)</option>
-          <option value="light">הולך קצת, לא הרבה</option>
-          <option value="moderate">פעיל — הרבה הליכה</option>
-          <option value="active">עבודה פיזית / פעיל מאוד</option>
-        </select>
+      <h3>📏 מדידה חדשה</h3>
+      <div class="input-grid">
+        <div class="input-field wide"><label>תאריך פגישה</label><input type="date" id="me-date" /></div>
+        <div class="input-field"><label>משקל (ק"ג)</label><input type="number" step="0.1" id="me-weight" inputmode="decimal" /></div>
+        <div class="input-field"><label>היקף חזה/יד (ס"מ)</label><input type="number" step="0.1" id="me-chest" inputmode="decimal" /></div>
+        <div class="input-field"><label>היקף טבור (ס"מ)</label><input type="number" step="0.1" id="me-navel" inputmode="decimal" /></div>
+        <div class="input-field"><label>היקף יד (ס"מ)</label><input type="number" step="0.1" id="me-arm" inputmode="decimal" /></div>
+        <div class="input-field"><label>היקף מותניים (ס"מ)</label><input type="number" step="0.1" id="me-waist" inputmode="decimal" /></div>
+        <div class="input-field"><label>היקף ירך (ס"מ)</label><input type="number" step="0.1" id="me-thigh" inputmode="decimal" /></div>
+        <div class="input-field"><label>היקף ישבן (ס"מ)</label><input type="number" step="0.1" id="me-seat" inputmode="decimal" /></div>
+        <div class="input-field"><label>% שומן מוערך</label><input type="number" step="0.1" id="me-fatpct" inputmode="decimal" /></div>
+        <div class="input-field"><label>מ"מ 3 קפלים בגב</label><input type="number" step="0.1" id="me-fold3" inputmode="decimal" /></div>
+        <div class="input-field"><label>מ"מ 2 קפל בטן</label><input type="number" step="0.1" id="me-fold2" inputmode="decimal" /></div>
+        <div class="input-field"><label>מ"מ 1 קפל חזה/יד</label><input type="number" step="0.1" id="me-fold1" inputmode="decimal" /></div>
       </div>
-      <button class="btn-primary" id="p-save-btn">💾 שמור פרופיל</button>
+      <button class="btn btn-gold" id="me-save-btn" style="margin-top:6px">💾 שמור מדידה</button>
     </div>
-  </div>
 
-  <nav id="bottom-nav-3" class="bottom-nav-clone">
-    <button class="nav-btn" data-screen="chat"><span class="nav-icon">💬</span>צ'אט</button>
-    <button class="nav-btn" data-screen="menulog"><span class="nav-icon">📅</span>היסטוריה</button>
-    <button class="nav-btn" data-screen="weighin"><span class="nav-icon">⚖️</span>שקילה</button>
-    <button class="nav-btn active" data-screen="profile"><span class="nav-icon">👤</span>פרופיל</button>
-  </nav>
-</div>
-
-<!-- ══════════════ HISTORY SCREEN ══════════════ -->
-<div id="menulog-screen" class="screen">
-  <header>
-    <div class="avatar">📅</div>
-    <div class="header-info">
-      <h1>היסטוריית תפריטים</h1>
-      <p>תפריט מלא לפי תאריך</p>
-    </div>
-  </header>
-
-  <div class="profile-body">
-
-    <!-- Date picker -->
     <div class="card">
-      <h3>📅 בחר תאריך</h3>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-        <button id="hist-prev" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:18px;cursor:pointer;">‹</button>
-        <div id="hist-date-display" style="flex:1;text-align:center;font-size:15px;font-weight:600;color:var(--accent)"></div>
-        <button id="hist-next" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:18px;cursor:pointer;">›</button>
-        <button id="hist-today" style="padding:6px 14px;border-radius:20px;border:1px solid rgba(99,179,237,0.3);background:rgba(99,179,237,0.08);color:#93c5fd;font-size:12px;cursor:pointer;">היום</button>
-      </div>
-
-      <!-- Days with data -->
-      <div id="hist-days-strip" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;"></div>
-    </div>
-
-    <!-- Planned menu -->
-    <div class="card" id="hist-planned-card">
-      <h3>📝 תפריט מתוכנן</h3>
-      <div id="hist-planned-content" style="font-size:14px;line-height:1.7;color:var(--text)"></div>
-    </div>
-
-    <!-- Actual eaten -->
-    <div class="card" id="hist-actual-card" style="display:none">
-      <h3>✅ מה אכלת בפועל</h3>
-      <div id="hist-actual-content" style="font-size:14px;line-height:1.7;color:var(--text)"></div>
-    </div>
-
-    <!-- Analysis button -->
-    <div id="hist-analyze-wrap" style="display:none">
-      <button class="btn-primary" id="hist-analyze-btn" style="background:linear-gradient(135deg,#48bb78,#38a169)">🤖 נתח את היום הזה</button>
-    </div>
-
-    <!-- Stats summary -->
-    <div class="card">
-      <h3>📊 סיכום כללי</h3>
-      <div class="stat-grid">
-        <div class="stat-box"><div class="val" id="hs-total">0</div><div class="lbl">ימים מתועדים</div></div>
-        <div class="stat-box"><div class="val" id="hs-reported">0</div><div class="lbl">דיווחי בפועל</div></div>
-      </div>
-    </div>
-
-  </div>
-
-  <nav class="bottom-nav-clone">
-    <button class="nav-btn" data-screen="chat"><span class="nav-icon">💬</span>צ'אט</button>
-    <button class="nav-btn active" data-screen="menulog"><span class="nav-icon">📅</span>היסטוריה</button>
-    <button class="nav-btn" data-screen="weighin"><span class="nav-icon">⚖️</span>שקילה</button>
-    <button class="nav-btn" data-screen="profile"><span class="nav-icon">👤</span>פרופיל</button>
-  </nav>
-</div>
-
-<!-- ══════════════ SETUP OVERLAY (first launch) ══════════════ -->
-<div class="overlay" id="setup-overlay">
-  <div class="modal">
-    <h3>👋 ברוך הבא!</h3>
-    <p class="sub">בוא נגדיר את הפרופיל שלך כדי שהקוצ' יוכל לעזור לך באמת</p>
-    <div class="progress-dots">
-      <div class="dot active" id="dot-0"></div>
-      <div class="dot" id="dot-1"></div>
-      <div class="dot" id="dot-2"></div>
-    </div>
-
-    <!-- Step 0 -->
-    <div id="setup-step-0">
-      <div class="input-row"><label>שם</label><input id="s-name" type="text" placeholder="ערן" /></div>
-      <div class="input-row"><label>גיל</label><input id="s-age" type="number" placeholder="30" inputmode="numeric" /></div>
-      <div class="input-row"><label>גובה (ס"מ)</label><input id="s-height" type="number" placeholder="175" inputmode="numeric" /></div>
-      <button class="btn-primary" onclick="setupNext(1)">המשך →</button>
-    </div>
-
-    <!-- Step 1 -->
-    <div id="setup-step-1" style="display:none">
-      <div class="input-row"><label>משקל נוכחי (ק"ג)</label><input id="s-weight" type="number" step="0.1" placeholder="80" inputmode="decimal" /></div>
-      <div class="input-row"><label>% שומן נוכחי (מ-Renpho)</label><input id="s-fat" type="number" step="0.1" placeholder="20" inputmode="decimal" /></div>
-      <div class="input-row"><label>יעד % שומן</label><input id="s-goal-fat" type="number" step="0.1" placeholder="15" inputmode="decimal" /></div>
-      <button class="btn-primary" onclick="setupNext(2)">המשך →</button>
-    </div>
-
-    <!-- Step 2 -->
-    <div id="setup-step-2" style="display:none">
-      <div class="input-row">
-        <label>רמת פעילות יומית (מחוץ לאימונים)</label>
-        <select id="s-activity">
-          <option value="sedentary">בעיקר יושב (משרד/בית)</option>
-          <option value="light">הולך קצת, לא הרבה</option>
-          <option value="moderate">פעיל — הרבה הליכה</option>
-          <option value="active">עבודה פיזית / פעיל מאוד</option>
-        </select>
-      </div>
-      <button class="btn-primary" onclick="setupFinish()">🚀 בואו נתחיל!</button>
+      <h3>📊 היסטוריית מדידות</h3>
+      <div id="measure-history"></div>
     </div>
   </div>
+
 </div>
 
-<!-- Tomorrow menu picker -->
-<div class="overlay" id="tomorrow-overlay">
-  <div class="modal">
-    <h3>🌅 תפריט למחר</h3>
-    <p>מה סוג היום של מחר?</p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:0">
-      <button onclick="buildTomorrowMenu('יום אימון כוח')" class="btn-primary">💪 יום אימון כוח</button>
-      <button onclick="buildTomorrowMenu('יום מנוחה')" class="btn-primary" style="background:linear-gradient(135deg,#48bb78,#38a169)">😴 יום מנוחה</button>
-      <button onclick="buildTomorrowMenu('יום עבודה ללא אימון')" class="btn-primary" style="background:linear-gradient(135deg,#ed8936,#dd6b20)">🏢 יום עבודה (ללא אימון)</button>
-      <button onclick="buildTomorrowMenu('יום עבודה עם אימון')" class="btn-primary" style="background:linear-gradient(135deg,#667eea,#764ba2)">🏢💪 יום עבודה + אימון</button>
-      <button onclick="document.getElementById('tomorrow-overlay').classList.remove('show')" class="btn-cancel" style="padding:10px;border-radius:12px;border:none;cursor:pointer;font-family:Heebo,sans-serif;font-size:14px;">ביטול</button>
-    </div>
-  </div>
+<!-- ═══════════ HISTORY DETAIL MODAL ═══════════ -->
+<div class="modal-overlay" id="detail-overlay">
+  <div class="modal-box" id="detail-body"></div>
 </div>
 
-<!-- Clear confirm -->
-<div class="overlay" id="confirm-overlay">
-  <div class="modal">
-    <h3>🗑 לנקות שיחה?</h3>
-    <p>כל ההיסטוריה תימחק לצמיתות</p>
-    <div class="modal-btns">
-      <button class="btn-cancel" id="cancel-clear">ביטול</button>
-      <button class="btn-danger" id="confirm-clear">מחיקה</button>
-    </div>
-  </div>
-</div>
+<div id="toast"></div>
 
-<style>
-  .bottom-nav-clone { display:flex; flex-shrink:0; background:rgba(12,12,24,0.97); border-top:1px solid var(--border); padding-bottom:var(--safe-bottom); }
-  .bottom-nav-clone .nav-btn { flex:1; padding:10px 0; border:none; background:none; color:var(--text2); font-family:'Heebo',sans-serif; font-size:10px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; transition:color .2s; }
-  .bottom-nav-clone .nav-btn .nav-icon { font-size:20px; }
-  .bottom-nav-clone .nav-btn.active { color:var(--accent); }
-</style>
-
+<script src="food-db.js"></script>
 <script>
-// ══════ STORAGE KEYS ══════
-const K_PROFILE  = 'coach_profile_v1';
-const K_HISTORY  = 'coach_history_v2';
-const K_WEIGHINS = 'coach_weighins_v1';
-const MAX_MSGS   = 40;
+// ═══════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════
+const K_DAYS = 'mass_days_v1';
+const K_WEIGHINS = 'mass_weighins_v1';
+const K_MEASURES = 'mass_measures_v1';
 
-// ══════ STATE ══════
-let profile  = null;
-let chatHistory = [];
-let weighins = [];
-let loading  = false;
-
-// ══════ QUICK ACTIONS ══════
-const QUICK_ACTIONS = [
-  { label:'🏠 יום בבית',        prompt:'אני היום בבית, יש לי אימון. מה לאכול?' },
-  { label:'🏢 יום עבודה',       prompt:'יום עבודה משרדי, אין אימון היום. מה לאכול?' },
-  { label:'✈️ יוצא מהבית',     prompt:'אני בחוץ כל היום, צריך לאכול בחוץ. מה מומלץ?' },
-  { label:'💪 לפני אימון',      prompt:'אימון בעוד שעה. מה לאכול לפני?' },
-  { label:'🍽️ אחרי אימון',     prompt:'סיימתי אימון. מה לאכול עכשיו?' },
-  { label:'😴 יום מנוחה',       prompt:'יום מנוחה מלא. כמה קלוריות לאכול ומה?' },
-  { label:'📊 תוכנית שבועית',  prompt:'תבנה לי תוכנית שבועית לאימונים ותזונה לירידה בשומן' },
-  { label:'➕ להוסיף אימונים?', prompt:'האם כדאי לי להוסיף עוד אימונים לצד 4 האימונים שלי?' },
-  { label:'⚖️ חישוב קלוריות',  prompt:'עזור לי לחשב כמה קלוריות אני צריך לאכול ביום' },
-  { label:'🌙 ארוחת ערב',       prompt:'מה לאכול לארוחת ערב שתתמוך בירידה בשומן?' },
-];
-
-// ══════ LOAD / SAVE ══════
-function loadAll() {
-  try { profile   = JSON.parse(localStorage.getItem(K_PROFILE))  || null; } catch { profile = null; }
-  try { chatHistory = JSON.parse(localStorage.getItem(K_HISTORY)) || []; } catch { chatHistory = []; }
-  try { weighins  = JSON.parse(localStorage.getItem(K_WEIGHINS)) || []; } catch { weighins = []; }
+function loadJSON(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; }
 }
-function saveProfile()  { localStorage.setItem(K_PROFILE,  JSON.stringify(profile)); }
-function saveHistory()  { chatHistory = chatHistory.slice(-MAX_MSGS); localStorage.setItem(K_HISTORY, JSON.stringify(chatHistory)); }
-function saveWeighins() { localStorage.setItem(K_WEIGHINS, JSON.stringify(weighins)); }
+function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
-// ══════ CALORIE CALC ══════
-function calcTDEE(p) {
-  if (!p || !p.weight || !p.height || !p.age) return null;
-  // Mifflin-St Jeor (male assumed — no gender field for simplicity)
-  const bmr = 10 * p.weight + 6.25 * p.height - 5 * p.age + 5;
-  const mults = { sedentary:1.2, light:1.375, moderate:1.55, active:1.725 };
-  const mult = mults[p.activity] || 1.375;
-  // +4 workouts/week ≈ add ~300
-  return Math.round(bmr * mult + 300);
+let days = loadJSON(K_DAYS, {});           // { "DD/MM/YYYY": {method, planned:{meal:{cats}}, actual:{meal:{cats}}, fixedNotes} }
+let weighins = loadJSON(K_WEIGHINS, []);   // [{date, weight, fat, muscle, bmi, bmr, visceral, water}]
+let measures = loadJSON(K_MEASURES, []);   // [{date, weight, chest, navel, arm, waist, thigh, seat, fatpct, fold3, fold2, fold1}]
+
+let currentDate = new Date();
+let currentMethod = 'portions';
+let currentMode = 'planned';   // 'planned' | 'actual'
+let currentMeal = 'בוקר';
+
+const MEALS = ['בוקר', 'ביניים', 'צהריים', 'אחר הצהריים', 'ערב'];
+
+function dateKey(d) { return d.toLocaleDateString('he-IL'); }
+function dayName(d) { const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת']; return days[d.getDay()]; }
+
+function emptyMealSet() {
+  const obj = {};
+  MEALS.forEach(m => { obj[m] = { protein: [], carb: [], fat: [], veg: [], fruit: [], free: [], outside: [] }; });
+  return obj;
 }
 
-function buildSystemPrompt() {
-  const now = new Date();
-  const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-  const dayName = days[now.getDay()];
-  const dateStr = `יום ${dayName}, ${now.toLocaleDateString('he-IL')}, שעה ${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}`;
-  let base = `התאריך והשעה הנוכחיים: ${dateStr}\n\nאתה מאמן כושר ותזונאי אישי מקצועי בעברית. `;
-
-  if (profile) {
-    const tdee = calcTDEE(profile);
-    const target = tdee ? tdee - 400 : null;
-    const protein = profile.weight ? Math.round(profile.weight * 2.1) : null;
-
-    base += `\n\nפרופיל המשתמש:\n`;
-    if (profile.name)    base += `• שם: ${profile.name}\n`;
-    if (profile.age)     base += `• גיל: ${profile.age}\n`;
-    if (profile.height)  base += `• גובה: ${profile.height} ס"מ\n`;
-    if (profile.weight)  base += `• משקל נוכחי: ${profile.weight} ק"ג\n`;
-    if (profile.fat)     base += `• % שומן נוכחי: ${profile.fat}%\n`;
-    if (profile.goalFat) base += `• יעד % שומן: ${profile.goalFat}%\n`;
-    if (profile.activity) {
-      const acts = { sedentary:'בעיקר יושב', light:'הולך קצת', moderate:'הרבה הליכה', active:'פעיל מאוד' };
-      base += `• פעילות יומית: ${acts[profile.activity]}\n`;
-    }
-    if (tdee)    base += `• TDEE משוער: ${tdee} קק"ל\n`;
-    if (target)  base += `• יעד קלוריות יומי: ${target} קק"ל (גירעון ~400)\n`;
-    if (protein) base += `• יעד חלבון יומי: ${protein} גרם\n`;
-
-    // Last weigh-in
-    if (weighins.length > 0) {
-      const last = weighins[weighins.length - 1];
-      base += `• שקילה אחרונה: ${last.weight} ק"ג`;
-      if (last.fat) base += `, ${last.fat}% שומן`;
-      base += ` (${new Date(last.date).toLocaleDateString('he-IL')})\n`;
-    }
-    if (weighins.length > 1) {
-      const diff = (weighins[weighins.length-1].weight - weighins[0].weight).toFixed(1);
-      base += `• שינוי כולל מהתחלה: ${diff > 0 ? '+' : ''}${diff} ק"ג\n`;
-    }
-  } else {
-    base += `\nאין עדיין פרופיל. בקש מהמשתמש להכנס לטאב הפרופיל ולמלא פרטים.\n`;
+function getDayEntry(key) {
+  if (!days[key]) {
+    days[key] = { method: 'portions', planned: emptyMealSet(), actual: emptyMealSet(), fixedNotes: '' };
   }
-
-  // Menu log context (last 5 days)
-  if (menuLog && menuLog.length > 0) {
-    const recent = menuLog.slice(-5).filter(e => e.planned || e.actual);
-    if (recent.length > 0) {
-      base += `\nיומן תפריטים אחרון:\n`;
-      recent.forEach(e => {
-        base += `• ${e.date} (${e.dayType}):`;
-        if (e.planned) base += ` תוכנן: ${e.planned.substring(0,80)}`;
-        if (e.actual)  base += ` | בפועל: ${e.actual.substring(0,80)}`;
-        base += '\n';
-      });
-    }
-  }
-
-  base += `
-אימונים: 4x/שבוע, כוח בלבד, split AB
-מטרה: ירידה באחוזי שומן תוך שמירה על מסת שריר
-
-תפקידיך:
-1. תזונאי: המלץ ארוחות עם קלוריות, חלבון, פחמימות, שומנים. התאם לסיטואציה.
-2. מאמן: המלץ על קרדיו/HIIT/הליכות בהתאם ליום.
-3. מחזק: עקוב אחר ההתקדמות, עודד, שמח על שינויים חיוביים.
-
-חוקים: ענה בעברית, השתמש ב-**bold**, תמיד כלול מספרים, היה קצר וברור.
-
-כשאתה בונה תפריט יומי — תמיד כלול ארוחת בוקר, צהריים, ערב וחטיפים עם קלוריות. המערכת תשמור אותו אוטומטית.
-כשהמשתמש מעדכן מה אכל בפועל — אשר שקיבלת ונתח בקצרה.
-כשמישהו שואל על תפריט יום קודם — שלוף מהיומן הקיים בסיסטם.`;
-
-  return base;
-}
-
-// ══════ NAVIGATION ══════
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(name + '-screen').classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.screen === name);
+  // migrate old format if needed
+  if (!days[key].planned) days[key].planned = emptyMealSet();
+  if (!days[key].actual) days[key].actual = emptyMealSet();
+  MEALS.forEach(m => {
+    if (!days[key].planned[m]) days[key].planned[m] = { protein: [], carb: [], fat: [], veg: [], fruit: [], free: [], outside: [] };
+    if (!days[key].actual[m]) days[key].actual[m] = { protein: [], carb: [], fat: [], veg: [], fruit: [], free: [], outside: [] };
   });
-  if (name === 'profile') fillProfileForm();
-  if (name === 'weighin') renderWeighinHistory();
-  if (name === 'menulog') renderMenuLog();
+  return days[key];
 }
 
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => showScreen(btn.dataset.screen));
+function getMealData(entry, mode, meal) {
+  return entry[mode][meal];
+}
+
+// Sum a category across ALL meals for a given mode
+function sumCategory(entry, mode, cat) {
+  let total = [];
+  MEALS.forEach(m => { total = total.concat(entry[mode][m][cat] || []); });
+  return total;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.view + '-view').classList.add('active');
+    if (tab.dataset.view === 'history') renderHistory();
+    if (tab.dataset.view === 'weighin') renderWeighinHistory();
+    if (tab.dataset.view === 'measure') renderMeasureHistory();
+  });
 });
 
-// ══════ SETUP WIZARD ══════
-let setupStep = 0;
-function setupNext(step) {
-  document.getElementById('setup-step-' + setupStep).style.display = 'none';
-  document.getElementById('dot-' + setupStep).classList.remove('active');
-  setupStep = step;
-  document.getElementById('setup-step-' + step).style.display = 'block';
-  document.getElementById('dot-' + step).classList.add('active');
+// ═══════════════════════════════════════════
+// HEADER DATE
+// ═══════════════════════════════════════════
+function updateHeaderDate() {
+  const now = new Date();
+  document.getElementById('today-label').textContent = `יום ${dayName(now)}, ${dateKey(now)}`;
 }
 
-function setupFinish() {
-  profile = {
-    name:     document.getElementById('s-name').value.trim(),
-    age:      parseFloat(document.getElementById('s-age').value) || null,
-    height:   parseFloat(document.getElementById('s-height').value) || null,
-    weight:   parseFloat(document.getElementById('s-weight').value) || null,
-    fat:      parseFloat(document.getElementById('s-fat').value) || null,
-    goalFat:  parseFloat(document.getElementById('s-goal-fat').value) || null,
-    activity: document.getElementById('s-activity').value,
-  };
-  saveProfile();
-  // Save initial weigh-in if weight given
-  if (profile.weight) {
-    weighins.push({ date: new Date().toISOString(), weight: profile.weight, fat: profile.fat || null, muscle: null });
-    saveWeighins();
-  }
-  document.getElementById('setup-overlay').classList.remove('show');
-  updateHeaderSubtitle();
-  updateStatsCard();
-  renderWeighinHistory();
-  // Send welcome message
-  const name = profile.name ? profile.name : '';
-  const greeting = `שלום${name ? ' ' + name : ''}! הפרופיל שלך נשמר 💪\n\nמבוסס על הנתונים שלך:\n**יעד קלוריות יומי:** ${calcTDEE(profile) - 400} קק"ל\n**יעד חלבון:** ${Math.round(profile.weight * 2.1)} גרם ביום\n\nמוכן להתחיל? ספר לי על היום שלך!`;
-  appendBubble('assistant', greeting);
-  chatHistory.push({ role:'assistant', content:greeting, ts:Date.now() });
-  saveHistory();
+// ═══════════════════════════════════════════
+// MENU DATE NAV
+// ═══════════════════════════════════════════
+function updateMenuDateLabel() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cur = new Date(currentDate); cur.setHours(0,0,0,0);
+  const diffDays = Math.round((cur - today) / 86400000);
+  let lbl = dateKey(currentDate);
+  let sub = `יום ${dayName(currentDate)}`;
+  if (diffDays === 0) sub = 'היום • ' + sub;
+  else if (diffDays === 1) sub = 'מחר • ' + sub;
+  else if (diffDays === -1) sub = 'אתמול • ' + sub;
+  document.getElementById('menu-date-lbl').innerHTML = `${lbl}<small>${sub}</small>`;
 }
 
-// ══════ PROFILE FORM ══════
-function fillProfileForm() {
-  if (!profile) return;
-  document.getElementById('p-name').value     = profile.name || '';
-  document.getElementById('p-age').value      = profile.age || '';
-  document.getElementById('p-height').value   = profile.height || '';
-  document.getElementById('p-weight').value   = profile.weight || '';
-  document.getElementById('p-fat').value      = profile.fat || '';
-  document.getElementById('p-goal-fat').value = profile.goalFat || '';
-  document.getElementById('p-activity').value = profile.activity || 'sedentary';
-}
-
-document.getElementById('p-save-btn').addEventListener('click', () => {
-  profile = {
-    name:     document.getElementById('p-name').value.trim(),
-    age:      parseFloat(document.getElementById('p-age').value) || null,
-    height:   parseFloat(document.getElementById('p-height').value) || null,
-    weight:   parseFloat(document.getElementById('p-weight').value) || null,
-    fat:      parseFloat(document.getElementById('p-fat').value) || null,
-    goalFat:  parseFloat(document.getElementById('p-goal-fat').value) || null,
-    activity: document.getElementById('p-activity').value,
-  };
-  saveProfile();
-  updateHeaderSubtitle();
-  updateStatsCard();
-  // visual feedback
-  const btn = document.getElementById('p-save-btn');
-  btn.textContent = '✅ נשמר!';
-  setTimeout(() => btn.textContent = '💾 שמור פרופיל', 2000);
+document.getElementById('menu-prev').addEventListener('click', () => {
+  currentDate.setDate(currentDate.getDate() - 1);
+  loadCurrentDay();
+});
+document.getElementById('menu-next').addEventListener('click', () => {
+  currentDate.setDate(currentDate.getDate() + 1);
+  loadCurrentDay();
+});
+document.getElementById('menu-today-btn').addEventListener('click', () => {
+  currentDate = new Date();
+  loadCurrentDay();
 });
 
-function updateHeaderSubtitle() {
-  if (profile && profile.name) {
-    document.getElementById('header-name').textContent = `קוצ' של ${profile.name}`;
-  }
-  if (profile && profile.weight && profile.fat) {
-    document.getElementById('header-sub').textContent = `${profile.weight} ק"ג • ${profile.fat}% שומן`;
-  }
+// ═══════════════════════════════════════════
+// METHOD SWITCH
+// ═══════════════════════════════════════════
+document.querySelectorAll('.method-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMethod = btn.dataset.method;
+    document.getElementById('portions-panel').style.display = currentMethod === 'portions' ? 'block' : 'none';
+    document.getElementById('fixed-panel').style.display = currentMethod === 'fixed' ? 'block' : 'none';
+    document.getElementById('mode-switch').style.display = currentMethod === 'portions' ? 'flex' : 'none';
+    const entry = getDayEntry(dateKey(currentDate));
+    entry.method = currentMethod;
+    saveJSON(K_DAYS, days);
+    renderDaySummary(entry);
+  });
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    const entry = getDayEntry(dateKey(currentDate));
+    renderMealTabs(entry);
+    renderTargets(entry);
+    renderCategories(entry);
+    renderDaySummary(entry);
+  });
+});
+
+// ═══════════════════════════════════════════
+// RENDER TARGETS ROW
+// ═══════════════════════════════════════════
+function renderTargets(entry) {
+  const row = document.getElementById('targets-row');
+  const cats = ['protein','carb','fat'];
+  row.innerHTML = cats.map(cat => {
+    const count = sumCategory(entry, currentMode, cat).reduce((s,i) => s + (i.qty||1), 0);
+    const target = FOOD_DB[cat].target;
+    const done = count >= target;
+    return `<div class="target-box ${done?'done':''}">
+      <div class="tv" style="color:${FOOD_DB[cat].color}">${count}/${target}</div>
+      <div class="tl">${FOOD_DB[cat].icon} ${FOOD_DB[cat].label}</div>
+    </div>`;
+  }).join('');
+  const vegCount = sumCategory(entry, currentMode, 'veg').length;
+  row.innerHTML += `<div class="target-box ${vegCount>=5?'done':''}">
+    <div class="tv" style="color:#5f9c7a">${vegCount}</div>
+    <div class="tl">🥦 ירקות</div>
+  </div>`;
 }
 
-function updateStatsCard() {
-  if (!profile) return;
-  document.getElementById('stat-weight').textContent = profile.weight ? profile.weight + '' : '—';
-  document.getElementById('stat-fat').textContent    = profile.fat ? profile.fat + '%' : '—';
-  const tdee = calcTDEE(profile);
-  document.getElementById('stat-cal').textContent    = tdee ? (tdee - 400) + '' : '—';
-  document.getElementById('stat-protein').textContent = profile.weight ? Math.round(profile.weight * 2.1) + '' : '—';
+// ═══════════════════════════════════════════
+// MEAL TABS
+// ═══════════════════════════════════════════
+function renderMealTabs(entry) {
+  const container = document.getElementById('meal-tabs');
+  container.innerHTML = MEALS.map(m => {
+    const mealData = entry[currentMode][m];
+    const itemCount = Object.values(mealData).reduce((s, arr) => s + arr.reduce((ss,i)=>ss+(i.qty||1),0), 0);
+    return `<button class="meal-tab ${m===currentMeal?'active':''}" onclick="selectMeal('${m}')">
+      ${m}${itemCount ? `<span class="mt-count">${itemCount}</span>` : ''}
+    </button>`;
+  }).join('');
 }
 
-// ══════ WEIGH-IN ══════
-document.getElementById('wi-save-btn').addEventListener('click', async () => {
-  const w = parseFloat(document.getElementById('wi-weight').value);
-  if (!w || w < 30 || w > 300) { alert('הכנס משקל תקין'); return; }
-  const fat    = parseFloat(document.getElementById('wi-fat').value) || null;
-  const muscle = parseFloat(document.getElementById('wi-muscle').value) || null;
+function selectMeal(meal) {
+  currentMeal = meal;
+  const entry = getDayEntry(dateKey(currentDate));
+  renderMealTabs(entry);
+  renderCategories(entry);
+}
 
-  const entry = { date: new Date().toISOString(), weight: w, fat, muscle };
+// ═══════════════════════════════════════════
+// RENDER CATEGORY SECTIONS (protein/carb/fat/veg/fruit/free) — for current mode+meal
+// ═══════════════════════════════════════════
+const CATS_ORDER = ['protein','carb','fat','veg','fruit','free','outside'];
+
+function renderCategories(entry) {
+  const container = document.getElementById('categories-container');
+  const mealData = entry[currentMode][currentMeal];
+  container.innerHTML = CATS_ORDER.map(catKey => {
+    let def;
+    if (catKey === 'veg') def = { label: 'ירקות', icon: '🥦', color: '#5f9c7a' };
+    else def = FOOD_DB[catKey];
+    const arr = mealData[catKey] || [];
+    const selCount = (catKey==='protein'||catKey==='carb'||catKey==='fat') ? arr.reduce((s,i)=>s+(i.qty||1),0) : arr.length;
+    return `
+    <div class="cat-section">
+      <div class="cat-head" onclick="toggleCat('${catKey}')">
+        <div class="ch-left">
+          <div class="cat-icon" style="background:${def.color}22;color:${def.color}">${def.icon}</div>
+          <div class="cat-name">${def.label}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cat-count">${selCount > 0 ? selCount + ' נבחרו' : ''}</span>
+          <span class="cat-arrow" id="arrow-${catKey}">›</span>
+        </div>
+      </div>
+      <div class="cat-body" id="body-${catKey}">
+        ${renderCatItems(catKey, mealData)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCatItems(catKey, mealData) {
+  if (catKey === 'veg') {
+    const list = mealData.veg || [];
+    let html = `<div style="display:flex;gap:8px;margin-bottom:10px">
+      <input type="text" id="veg-input" placeholder="הוסף ירק..." style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;font-family:Heebo,sans-serif;outline:none;direction:rtl" />
+      <button onclick="addVeg()" style="padding:0 16px;border-radius:10px;border:none;background:var(--gold);color:#1a1710;font-size:13px;cursor:pointer;font-weight:700">הוסף</button>
+    </div>`;
+    if (list.length) {
+      html += list.map((v,i) => `<div class="food-item"><div class="food-name">${v.name}</div><button onclick="removeVeg(${i})" style="background:none;border:none;color:#c1666b;font-size:16px;cursor:pointer">✕</button></div>`).join('');
+    } else {
+      html += `<div style="text-align:center;color:var(--text2);font-size:12px;padding:10px">אין ירקות עדיין בארוחה זו</div>`;
+    }
+    return html;
+  }
+
+  if (catKey === 'fruit' || catKey === 'free' || catKey === 'outside') {
+    const items = FOOD_DB[catKey].items;
+    const selected = mealData[catKey] || [];
+    return items.map(it => {
+      const name = typeof it === 'string' ? it : it.name;
+      const note = typeof it === 'object' ? it.note : null;
+      const isSelected = selected.some(s => s.name === name);
+      return `<div class="food-item">
+        <div>
+          <div class="food-name">${name}</div>
+          ${note ? `<div style="font-size:10.5px;color:var(--text2);margin-top:2px">${note}</div>` : ''}
+        </div>
+        <button class="qty-btn" style="${isSelected?'background:var(--gold);color:#1a1710;border-color:var(--gold)':''}" onclick="toggleSimple('${catKey}','${name.replace(/'/g,"\\'")}')">${isSelected?'✓':'+'}</button>
+      </div>`;
+    }).join('');
+  }
+
+  // protein / carb / fat — quantity based
+  const items = FOOD_DB[catKey].items;
+  const selected = mealData[catKey] || [];
+  let html = items.map(it => {
+    const sel = selected.find(s => s.name === it.name);
+    const qty = sel ? sel.qty : 0;
+    return `<div class="food-item">
+      <div class="food-name">${it.name}</div>
+      <div class="fi-controls">
+        <button class="qty-btn" onclick="changeQty('${catKey}','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
+        <span class="qty-val">${qty}</span>
+        <button class="qty-btn" onclick="changeQty('${catKey}','${it.name.replace(/'/g,"\\'")}',1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (catKey === 'protein' && FOOD_DB.protein.halfPlusFat) {
+    html += `<div class="section-label">חלבון + חצי שומן</div>`;
+    html += FOOD_DB.protein.halfPlusFat.map(it => {
+      const sel = selected.find(s => s.name === it.name);
+      const qty = sel ? sel.qty : 0;
+      return `<div class="food-item">
+        <div><div class="food-name">${it.name}</div><div style="font-size:10.5px;color:var(--text2)">${it.note}</div></div>
+        <div class="fi-controls">
+          <button class="qty-btn" onclick="changeQty('protein','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
+          <span class="qty-val">${qty}</span>
+          <button class="qty-btn" onclick="changeQty('protein','${it.name.replace(/'/g,"\\'")}',1)">+</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  if (catKey === 'carb') {
+    if (FOOD_DB.carb.soups) {
+      html += `<div class="section-label">מרקים</div>`;
+      html += FOOD_DB.carb.soups.map(it => {
+        const sel = selected.find(s => s.name === it.name);
+        const qty = sel ? sel.qty : 0;
+        return `<div class="food-item"><div class="food-name">${it.name}</div>
+          <div class="fi-controls">
+            <button class="qty-btn" onclick="changeQty('carb','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
+            <span class="qty-val">${qty}</span>
+            <button class="qty-btn" onclick="changeQty('carb','${it.name.replace(/'/g,"\\'")}',1)">+</button>
+          </div></div>`;
+      }).join('');
+    }
+    if (FOOD_DB.carb.misc) {
+      html += `<div class="section-label">שונות</div>`;
+      html += FOOD_DB.carb.misc.map(it => {
+        const sel = selected.find(s => s.name === it.name);
+        const qty = sel ? sel.qty : 0;
+        return `<div class="food-item"><div class="food-name">${it.name}</div>
+          <div class="fi-controls">
+            <button class="qty-btn" onclick="changeQty('carb','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
+            <span class="qty-val">${qty}</span>
+            <button class="qty-btn" onclick="changeQty('carb','${it.name.replace(/'/g,"\\'")}',1)">+</button>
+          </div></div>`;
+      }).join('');
+    }
+  }
+
+  return html;
+}
+
+function toggleCat(catKey) {
+  const body = document.getElementById('body-' + catKey);
+  const arrow = document.getElementById('arrow-' + catKey);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+function changeQty(catKey, name, delta) {
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  let arr = mealData[catKey];
+  let item = arr.find(i => i.name === name);
+  if (!item && delta > 0) {
+    arr.push({ name, qty: 1 });
+  } else if (item) {
+    item.qty += delta;
+    if (item.qty <= 0) arr = arr.filter(i => i.name !== name);
+  }
+  mealData[catKey] = arr;
+  saveJSON(K_DAYS, days);
+  renderTargets(entry);
+  renderMealTabs(entry);
+  renderCategories(entry);
+  reopenCat(catKey);
+  renderDaySummary(entry);
+}
+
+function toggleSimple(catKey, name) {
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  let arr = mealData[catKey] || [];
+  const idx = arr.findIndex(i => i.name === name);
+  if (idx >= 0) arr.splice(idx, 1);
+  else arr.push({ name });
+  mealData[catKey] = arr;
+  saveJSON(K_DAYS, days);
+  renderMealTabs(entry);
+  renderCategories(entry);
+  reopenCat(catKey);
+  renderDaySummary(entry);
+}
+
+function addVeg() {
+  const input = document.getElementById('veg-input');
+  const val = input.value.trim();
+  if (!val) return;
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  mealData.veg.push({ name: val });
+  saveJSON(K_DAYS, days);
+  renderTargets(entry);
+  renderMealTabs(entry);
+  renderCategories(entry);
+  reopenCat('veg');
+  renderDaySummary(entry);
+}
+
+function removeVeg(idx) {
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  mealData.veg.splice(idx, 1);
+  saveJSON(K_DAYS, days);
+  renderTargets(entry);
+  renderMealTabs(entry);
+  renderCategories(entry);
+  reopenCat('veg');
+  renderDaySummary(entry);
+}
+
+function reopenCat(catKey) {
+  const body = document.getElementById('body-' + catKey);
+  const arrow = document.getElementById('arrow-' + catKey);
+  if (body) { body.classList.add('open'); arrow.style.transform = 'rotate(90deg)'; }
+}
+
+// ═══════════════════════════════════════════
+// DAY SUMMARY (both planned + actual, all meals)
+// ═══════════════════════════════════════════
+function buildMealRows(entry, mode) {
+  const rows = [];
+  MEALS.forEach(meal => {
+    const md = entry[mode][meal];
+    const items = [];
+    ['protein','carb','fat'].forEach(cat => {
+      (md[cat]||[]).forEach(it => items.push(`${FOOD_DB[cat].icon} ${it.name}${it.qty>1?' ×'+it.qty:''}`));
+    });
+    (md.veg||[]).forEach(it => items.push(`🥦 ${it.name}`));
+    (md.fruit||[]).forEach(it => items.push(`🍎 ${it.name}`));
+    (md.free||[]).forEach(it => items.push(`🍬 ${it.name}`));
+    (md.outside||[]).forEach(it => items.push(`🍽️ ${it.name}`));
+    if (items.length) rows.push({ meal, items });
+  });
+  return rows;
+}
+
+function renderDaySummary(entry) {
+  document.getElementById('day-summary-title').textContent = currentMode === 'planned' ? '📋 סיכום היום — מתוכנן' : '📋 סיכום היום — בפועל';
+  const body = document.getElementById('day-summary-body');
+
+  if (currentMethod === 'fixed') {
+    body.innerHTML = `<div style="font-size:12px;color:var(--text2);text-align:center;padding:8px">משתמש בתפריט הקבוע של קארין</div>`;
+    return;
+  }
+
+  const rows = buildMealRows(entry, currentMode);
+  if (rows.length === 0) {
+    body.innerHTML = `<div style="font-size:12px;color:var(--text2);text-align:center;padding:10px">עדיין לא נבחר כלום</div>`;
+    return;
+  }
+  body.innerHTML = rows.map(r => `
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--gold-soft);margin-bottom:5px">${r.meal}</div>
+      ${r.items.map(i => `<div style="font-size:12.5px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">${i}</div>`).join('')}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// FIXED MENU RENDER
+// ═══════════════════════════════════════════
+function renderFixedMenu() {
+  const container = document.getElementById('fixed-menu-container');
+  container.innerHTML = FIXED_MENU.map(meal => `
+    <div class="meal-block">
+      <h4>${meal.name}</h4>
+      <ul>${meal.parts.map(p => `<li>${p}</li>`).join('')}</ul>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// LOAD CURRENT DAY INTO UI
+// ═══════════════════════════════════════════
+function loadCurrentDay() {
+  updateMenuDateLabel();
+  const key = dateKey(currentDate);
+  const entry = getDayEntry(key);
+
+  currentMethod = entry.method || 'portions';
+  currentMode = 'planned';
+  currentMeal = 'בוקר';
+  document.querySelectorAll('.method-btn').forEach(b => b.classList.toggle('active', b.dataset.method === currentMethod));
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === 'planned'));
+  document.getElementById('portions-panel').style.display = currentMethod === 'portions' ? 'block' : 'none';
+  document.getElementById('fixed-panel').style.display = currentMethod === 'fixed' ? 'block' : 'none';
+  document.getElementById('mode-switch').style.display = currentMethod === 'portions' ? 'flex' : 'none';
+
+  renderMealTabs(entry);
+  renderTargets(entry);
+  renderCategories(entry);
+  renderFixedMenu();
+  renderDaySummary(entry);
+}
+
+document.getElementById('save-day-btn').addEventListener('click', () => {
+  const key = dateKey(currentDate);
+  const entry = getDayEntry(key);
+  entry.method = currentMethod;
+  saveJSON(K_DAYS, days);
+  showToast('✅ היום נשמר!');
+});
+
+document.getElementById('clear-day-btn').addEventListener('click', () => {
+  if (!confirm(`לנקות את הבחירות של "${currentMeal}" (${currentMode === 'planned' ? 'מתוכנן' : 'בפועל'})?`)) return;
+  const key = dateKey(currentDate);
+  const entry = getDayEntry(key);
+  entry[currentMode][currentMeal] = { protein: [], carb: [], fat: [], veg: [], fruit: [], free: [], outside: [] };
+  saveJSON(K_DAYS, days);
+  renderMealTabs(entry);
+  renderTargets(entry);
+  renderCategories(entry);
+  renderDaySummary(entry);
+  showToast('🗑 נוקה');
+});
+
+// ═══════════════════════════════════════════
+// HISTORY VIEW
+// ═══════════════════════════════════════════
+function summarizeDay(entry, mode) {
+  const p = sumCategory(entry, mode, 'protein').reduce((s,i)=>s+(i.qty||1),0);
+  const c = sumCategory(entry, mode, 'carb').reduce((s,i)=>s+(i.qty||1),0);
+  const f = sumCategory(entry, mode, 'fat').reduce((s,i)=>s+(i.qty||1),0);
+  return `חלבון ${p}/6 • פחמימה ${c}/4 • שומן ${f}/3`;
+}
+
+function dayHasData(entry, mode) {
+  return MEALS.some(m => {
+    const md = entry[mode][m];
+    return md.protein.length || md.carb.length || md.fat.length || md.veg.length || md.fruit.length || md.free.length || md.outside.length;
+  });
+}
+
+function renderHistory() {
+  const container = document.getElementById('history-list');
+  const keys = Object.keys(days).filter(k => {
+    const e = days[k];
+    return e.method === 'fixed' || dayHasData(e, 'planned') || dayHasData(e, 'actual');
+  });
+
+  if (keys.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="em-icon">📋</div><div class="em-text">עוד אין ימים מתועדים<br>התחל לבנות תפריט בטאב "תפריט יומי"</div></div>`;
+    return;
+  }
+
+  keys.sort((a,b) => parseDate(b) - parseDate(a));
+
+  container.innerHTML = keys.map(k => {
+    const e = days[k];
+    const hasPlanned = e.method === 'fixed' || dayHasData(e, 'planned');
+    const hasActual = dayHasData(e, 'actual');
+    let statusHtml = '';
+    if (hasPlanned && hasActual) statusHtml = `<span class="status-chip match">מתוכנן ✓ בפועל ✓</span>`;
+    else if (hasPlanned) statusHtml = `<span class="status-chip pending">מתוכנן בלבד</span>`;
+    else if (hasActual) statusHtml = `<span class="status-chip pending">בפועל בלבד</span>`;
+
+    return `<div class="hist-item" onclick="showDayDetail('${k}')">
+      <div class="hi-top">
+        <div class="hi-date">${k}</div>
+        <div class="hi-badge">${e.method === 'fixed' ? 'תפריט קבוע' : 'לפי מנות'}</div>
+      </div>
+      <div class="hi-summary">${e.method === 'fixed' ? 'תפריט קבוע של קארין' : summarizeDay(e, 'planned')}</div>
+      <div class="hi-status">${statusHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function parseDate(str) {
+  const parts = str.split('/');
+  return new Date(parts[2], parts[1]-1, parts[0]);
+}
+
+function renderModeMeals(entry, mode) {
+  if (entry.method === 'fixed' && mode === 'planned') {
+    return FIXED_MENU.map(m => `<div class="meal-block"><h4>${m.name}</h4><ul>${m.parts.map(p=>`<li>${p}</li>`).join('')}</ul></div>`).join('');
+  }
+  const rows = buildMealRows(entry, mode);
+  if (rows.length === 0) {
+    return `<div class="empty" style="padding:20px"><div class="em-text">לא נבחר כלום עבור ${mode === 'planned' ? 'התכנון' : 'בפועל'}</div></div>`;
+  }
+  return `<div class="card">
+    ${rows.map(r => `
+      <div style="margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold-soft);margin-bottom:5px">${r.meal}</div>
+        ${r.items.map(i => `<div style="font-size:12.5px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">${i}</div>`).join('')}
+      </div>`).join('')}
+    <div style="margin-top:6px;font-size:11.5px;color:var(--text2)">${summarizeDay(entry, mode)}</div>
+  </div>`;
+}
+
+function showDayDetail(key) {
+  const e = days[key];
+  const body = document.getElementById('detail-body');
+
+  body.innerHTML = `
+    <h3>📅 ${key}</h3>
+    <div class="section-label">📝 מתוכנן</div>
+    ${renderModeMeals(e, 'planned')}
+    <div class="section-label">✅ בפועל</div>
+    ${renderModeMeals(e, 'actual')}
+    <button class="btn btn-outline" onclick="document.getElementById('detail-overlay').classList.remove('show')">סגור</button>
+  `;
+  document.getElementById('detail-overlay').classList.add('show');
+}
+
+// ═══════════════════════════════════════════
+// WEIGH-IN
+// ═══════════════════════════════════════════
+document.getElementById('wi-save-btn').addEventListener('click', () => {
+  const weight = parseFloat(document.getElementById('wi-weight').value);
+  if (!weight || weight < 30 || weight > 300) { alert('הכנס משקל תקין'); return; }
+
+  const entry = {
+    date: new Date().toISOString(),
+    weight,
+    fat: parseFloat(document.getElementById('wi-fat').value) || null,
+    muscle: parseFloat(document.getElementById('wi-muscle').value) || null,
+    bmi: parseFloat(document.getElementById('wi-bmi').value) || null,
+    bmr: parseFloat(document.getElementById('wi-bmr').value) || null,
+    visceral: parseFloat(document.getElementById('wi-visceral').value) || null,
+    water: parseFloat(document.getElementById('wi-water').value) || null,
+  };
   weighins.push(entry);
-  saveWeighins();
+  saveJSON(K_WEIGHINS, weighins);
 
-  // Update profile weight too
-  if (profile) {
-    profile.weight = w;
-    if (fat) profile.fat = fat;
-    saveProfile();
-    updateStatsCard();
-    updateHeaderSubtitle();
-  }
-
-  // Clear inputs
-  document.getElementById('wi-weight').value = '';
-  document.getElementById('wi-fat').value    = '';
-  document.getElementById('wi-muscle').value = '';
-
+  ['wi-weight','wi-fat','wi-muscle','wi-bmi','wi-bmr','wi-visceral','wi-water'].forEach(id => document.getElementById(id).value = '');
   renderWeighinHistory();
-
-  // Auto-send update to chat
-  const prev = weighins.length > 1 ? weighins[weighins.length - 2] : null;
-  let updateMsg = `עדכון שקילה: ${w} ק"ג`;
-  if (fat) updateMsg += `, ${fat}% שומן`;
-  if (muscle) updateMsg += `, ${muscle}% שריר`;
-  if (prev) {
-    const diff = (w - prev.weight).toFixed(1);
-    updateMsg += `. שינוי מהשקילה הקודמת: ${diff > 0 ? '+' : ''}${diff} ק"ג.`;
-  }
-  updateMsg += ' תנתח את ההתקדמות שלי ותגיד לי מה לשנות.';
-
-  // Switch to chat and send
-  showScreen('chat');
-  await send(updateMsg);
-
-  // Button feedback
-  const btn = document.getElementById('wi-save-btn');
-  btn.textContent = '✅ נשמר! עברתי לצ\'אט';
-  setTimeout(() => btn.textContent = '💾 שמור ועדכן את הקוצ\'', 3000);
+  showToast('✅ שקילה נשמרה!');
 });
 
 function renderWeighinHistory() {
   const container = document.getElementById('weighin-history');
   if (weighins.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="big-emoji">⚖️</div>עוד אין שקילות<br>העלה צילום מסך מ-Renpho</div>';
+    container.innerHTML = `<div class="empty"><div class="em-icon">⚖️</div><div class="em-text">עוד אין שקילות</div></div>`;
     return;
   }
-
-  const LABELS = {
-    weight:           { label: 'משקל',              unit: 'ק"ג', icon: '⚖️' },
-    fat:              { label: 'שומן גוף',           unit: '%',   icon: '🔴' },
-    subcutaneousFat:  { label: 'שומן תת-עורי',       unit: '%',   icon: '🟠' },
-    bmi:              { label: 'BMI',                unit: '',    icon: '📊' },
-    fatFreeMass:      { label: 'מסה נטולת שומן',     unit: 'ק"ג', icon: '💪' },
-    skeletalMuscle:   { label: 'שריר שלד',           unit: '%',   icon: '🦵' },
-    muscleMass:       { label: 'מסת שריר',           unit: 'ק"ג', icon: '💪' },
-    muscle:           { label: '% שריר',             unit: '%',   icon: '💪' },
-    waterPercent:     { label: 'מים בגוף',           unit: '%',   icon: '💧' },
-    visceralFat:      { label: 'שומן קרביים',        unit: '',    icon: '🫀' },
-    bmr:              { label: 'BMR',                unit: 'קק"ל',icon: '🔥' },
-    protein:          { label: 'חלבון',              unit: '%',   icon: '🥩' },
-    boneMass:         { label: 'מסת עצם',            unit: 'ק"ג', icon: '🦴' },
-    metabolicAge:     { label: 'גיל מטבולי',         unit: '',    icon: '🧬' },
-  };
-
+  const LABELS = { fat:'% שומן', muscle:'שריר', bmi:'BMI', bmr:'BMR', visceral:'שומן קרביים', water:'% מים' };
   const sorted = [...weighins].reverse();
   container.innerHTML = sorted.map((w, i) => {
-    const prev = sorted[i + 1];
+    const prev = sorted[i+1];
     let deltaHtml = '';
-    if (prev && prev.weight) {
+    if (prev) {
       const d = (w.weight - prev.weight).toFixed(1);
-      const cls = d < 0 ? 'delta-down' : d > 0 ? 'delta-up' : 'delta-same';
-      const arrow = d < 0 ? '↓' : d > 0 ? '↑' : '→';
-      deltaHtml = `<div class="hi-delta ${cls}">${arrow} ${Math.abs(d)} ק"ג</div>`;
+      const cls = d > 0 ? 'delta-up' : d < 0 ? 'delta-down' : '';
+      const arrow = d > 0 ? '↑' : d < 0 ? '↓' : '→';
+      deltaHtml = `<div class="wi-delta ${cls}">${arrow} ${Math.abs(d)} ק"ג</div>`;
     }
-
     const idx = sorted.length - 1 - i;
-    const dateStr = new Date(w.date).toLocaleDateString('he-IL', {day:'numeric', month:'long', year:'numeric'});
-
-    // All Renpho fields — show ALL that exist
-    const allFields = Object.entries(LABELS)
-      .filter(([k]) => w[k] != null && w[k] !== 0 && k !== 'weight')
-      .map(([k, meta]) => {
-        const val = w[k];
-        return `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-          <span style="color:var(--text2);font-size:13px">${meta.icon} ${meta.label}</span>
-          <span style="font-weight:600;font-size:14px;color:var(--text)">${val}${meta.unit}</span>
-        </div>`}).join('');
-
-    return `
-      <div style="border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;background:rgba(255,255,255,0.03);">
-        <div onclick="toggleWeighin(${idx})" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;">
-          <div>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:3px">${dateStr}</div>
-            <div style="font-size:11px;color:var(--text2)">${[
-              w.fat ? `שומן ${w.fat}%` : '',
-              w.muscleMass ? `שריר ${w.muscleMass}ק"ג` : (w.skeletalMuscle ? `שריר ${w.skeletalMuscle}%` : ''),
-              w.bmi ? `BMI ${w.bmi}` : '',
-            ].filter(Boolean).join(' • ')}</div>
-          </div>
-          <div style="text-align:center;display:flex;align-items:center;gap:12px">
-            <div>
-              <div class="hi-weight">${w.weight} ק"ג</div>
-              ${deltaHtml}
-            </div>
-            <span id="arrow-${idx}" style="color:var(--text2);font-size:18px;transition:transform .2s">›</span>
-          </div>
-        </div>
-        <div id="weighin-details-${idx}" style="display:none;padding:0 16px 14px;border-top:1px solid var(--border);">
-          <div style="margin-top:10px">
-            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-              <span style="color:var(--text2);font-size:13px">⚖️ משקל</span>
-              <span style="font-weight:700;font-size:15px;color:var(--accent)">${w.weight} ק"ג</span>
-            </div>
-            ${allFields || '<div style="color:var(--text2);font-size:12px;padding:8px 0;text-align:center">אין נתונים נוספים לשקילה זו</div>'}
-          </div>
-          <button onclick="analyzeWeighin(${idx})" style="margin-top:12px;width:100%;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:13px;font-family:Heebo,sans-serif;cursor:pointer;">🤖 נתח שקילה זו</button>
-        </div>
-      </div>`;
+    const fields = Object.entries(LABELS).filter(([k]) => w[k] != null)
+      .map(([k,l]) => `<div class="wi-row"><span>${l}</span><span>${w[k]}</span></div>`).join('');
+    return `<div class="wi-item">
+      <div class="wi-head" onclick="toggleWi(${idx})">
+        <div><div class="wi-date">${new Date(w.date).toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'})}</div></div>
+        <div style="text-align:left"><div class="wi-weight">${w.weight} ק"ג</div>${deltaHtml}</div>
+      </div>
+      <div class="wi-body" id="wi-body-${idx}">${fields || '<div style="color:var(--text2);font-size:12px;padding:8px 0">אין נתונים נוספים</div>'}</div>
+    </div>`;
   }).join('');
 }
 
-function toggleWeighin(idx) {
-  const details = document.getElementById(`weighin-details-${idx}`);
-  const arrow   = document.getElementById(`arrow-${idx}`);
-  const isOpen  = details.style.display !== 'none';
-  details.style.display = isOpen ? 'none' : 'block';
-  arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+function toggleWi(idx) {
+  document.getElementById('wi-body-'+idx).classList.toggle('open');
 }
 
-function analyzeWeighin(idx) {
-  const sorted = [...weighins].reverse();
-  const w = sorted[idx];
-  if (!w) return;
-  const LABELS = {
-    weight:'משקל', fat:'שומן גוף', subcutaneousFat:'שומן תת-עורי',
-    bmi:'BMI', fatFreeMass:'מסה נטולת שומן', skeletalMuscle:'שריר שלד',
-    muscleMass:'מסת שריר', waterPercent:'מים', visceralFat:'שומן קרביים',
-    bmr:'BMR', protein:'חלבון', boneMass:'מסת עצם', metabolicAge:'גיל מטבולי'
-  };
-  const summary = Object.entries(LABELS).filter(([k]) => w[k] != null).map(([k, l]) => `${l}: ${w[k]}`).join(', ');
-  const prompt = `נתח את נתוני השקילה שלי מתאריך ${new Date(w.date).toLocaleDateString('he-IL')}: ${summary}. האם אני בכיוון הנכון? מה לשפר?`;
-  showScreen('chat');
-  send(prompt);
-}
+// ═══════════════════════════════════════════
+// MEASUREMENTS (monthly, from Karin meetings)
+// ═══════════════════════════════════════════
+document.getElementById('me-save-btn').addEventListener('click', () => {
+  const dateVal = document.getElementById('me-date').value;
+  const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('he-IL') : new Date().toLocaleDateString('he-IL');
 
-// ══════ RENPHO SCREENSHOT ══════
-async function handleRenphoImage(file) {
-  if (!file) return;
-  const status = document.getElementById('renpho-status');
-  const preview = document.getElementById('renpho-preview');
-  const img = document.getElementById('renpho-img');
-
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const base64 = ev.target.result.split(',')[1];
-    const mimeType = file.type || 'image/jpeg';
-
-    // Show preview
-    img.src = ev.target.result;
-    preview.style.display = 'block';
-    status.textContent = '⏳ קורא את הנתונים מ-Renpho...';
-
-    try {
-      const res = await fetch('https://coach-proxy.lapushnianeran.workers.dev/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
-          max_tokens: 500,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
-              { type: 'text', text: `זהו צילום מסך מאפליקציית Renpho. חלץ את כל המדדים הנומריים שרואים בתמונה ותחזיר אותם בפורמט JSON בלבד, ללא טקסט נוסף. השתמש בשמות המפתחות הבאים בדיוק:
-- weight (משקל בק"ג)
-- fat (Body Fat %)
-- subcutaneousFat (Subcutaneous Fat %)
-- bmi (BMI)
-- fatFreeMass (Fat-Free Mass בק"ג)
-- skeletalMuscle (Skeletal Muscle %)
-- muscleMass (Muscle Mass בק"ג)
-- waterPercent (Body Water %)
-- visceralFat (Visceral Fat מספר)
-- bmr (BMR בקק"ל)
-- protein (Protein %)
-- boneMass (Bone Mass בק"ג)
-- metabolicAge (Metabolic Age)
-
-החזר רק JSON תקין. אם מדד לא מופיע בתמונה, אל תכלול אותו. לדוגמה: {"weight":73.0,"fat":22.5,"bmi":23.8}` }
-            ]
-          }]
-        })
-      });
-
-      const data = await res.json();
-      const text = data.content?.[0]?.text || '';
-
-      let parsed;
-      try {
-        const clean = text.replace(/```json|```/g, '').trim();
-        parsed = JSON.parse(clean);
-      } catch {
-        status.textContent = '❌ לא הצלחתי לקרוא את הנתונים. נסה תמונה ברורה יותר.';
-        return;
-      }
-
-      // Update profile
-      if (parsed.weight)          { profile.weight          = parsed.weight; document.getElementById('wi-weight').value = parsed.weight; }
-      if (parsed.fat)             { profile.fat             = parsed.fat;    document.getElementById('wi-fat').value    = parsed.fat; }
-      if (parsed.muscleMass)      { document.getElementById('wi-muscle').value = parsed.muscleMass; }
-      else if (parsed.skeletalMuscle) { document.getElementById('wi-muscle').value = parsed.skeletalMuscle; }
-      saveProfile();
-      updateStatsCard();
-      updateHeaderSubtitle();
-
-      // Save weigh-in with ALL fields
-      const entry = {
-        date:             new Date().toISOString(),
-        weight:           parsed.weight           || null,
-        fat:              parsed.fat              || null,
-        subcutaneousFat:  parsed.subcutaneousFat  || null,
-        bmi:              parsed.bmi              || null,
-        fatFreeMass:      parsed.fatFreeMass      || null,
-        skeletalMuscle:   parsed.skeletalMuscle   || null,
-        muscleMass:       parsed.muscleMass       || null,
-        waterPercent:     parsed.waterPercent     || null,
-        visceralFat:      parsed.visceralFat      || null,
-        bmr:              parsed.bmr              || null,
-        protein:          parsed.protein          || null,
-        boneMass:         parsed.boneMass         || null,
-        metabolicAge:     parsed.metabolicAge     || null,
-      };
-      weighins.push(entry);
-      saveWeighins();
-      renderWeighinHistory();
-
-      // Show success + summary
-      const summary = Object.entries(parsed).map(([k,v]) => {
-        const labels = {weight:'משקל',fat:'שומן',muscle:'שריר',bmi:'BMI',bmr:'BMR',visceralFat:'שומן קרביים',waterPercent:'מים',boneMass:'עצם'};
-        const units  = {weight:'ק"ג',fat:'%',muscle:'%',bmi:'',bmr:'קק"ל',visceralFat:'',waterPercent:'%',boneMass:'ק"ג'};
-        return `${labels[k]||k}: ${v}${units[k]||''}`;
-      }).join(' • ');
-      status.innerHTML = `✅ נשמר! <span style="color:var(--text2);font-size:12px">${summary}</span>`;
-
-      // Send to chat for analysis
-      const prompt = `עדכון שקילה מ-Renpho: ${summary}. נתח את ההתקדמות שלי.`;
-      showScreen('chat');
-      await send(prompt);
-
-    } catch (e) {
-      status.textContent = '❌ שגיאה בחיבור. נסה שוב.';
-    }
-  };
-  reader.readAsDataURL(file);
-}
-
-document.getElementById('renpho-gallery-btn').addEventListener('click', () => document.getElementById('renpho-input').click());
-document.getElementById('renpho-camera-btn').addEventListener('click', () => document.getElementById('renpho-camera').click());
-document.getElementById('renpho-input').addEventListener('change', e => { handleRenphoImage(e.target.files[0]); e.target.value=''; });
-document.getElementById('renpho-camera').addEventListener('change', e => { handleRenphoImage(e.target.files[0]); e.target.value=''; });
-
-// ══════ AUTO MENU DETECTION ══════
-const MENU_KEYWORDS_PLANNED = ['ארוחת בוקר','ארוחת צהריים','ארוחת ערב','חטיף','תפריט','לאכול','קלוריות','גרם','חלבון'];
-const ACTUAL_KEYWORDS = ['אכלתי','אכלנו','בסוף אכלתי','בפועל','הייתי','שינוי','אכלת'];
-const CONFIRM_KEYWORDS = ['אוקיי','בסדר','מסכים','מאשר','טוב','יאללה','נשמע טוב','מעולה','קבוע','סגור','נסגר'];
-
-function looksLikePlannedMenu(coachReply) {
-  const lower = coachReply.toLowerCase();
-  let score = 0;
-  MENU_KEYWORDS_PLANNED.forEach(k => { if (coachReply.includes(k)) score++; });
-  if (coachReply.includes('קק"ל') || coachReply.includes('קלוריות')) score += 2;
-  if (coachReply.includes('ארוחת בוקר') && coachReply.includes('ארוחת צהריים')) score += 3;
-  return score >= 3;
-}
-
-function looksLikeUserConfirmed(userMsg) {
-  return CONFIRM_KEYWORDS.some(k => userMsg.includes(k));
-}
-
-function looksLikeActualReport(userMsg) {
-  return ACTUAL_KEYWORDS.some(k => userMsg.includes(k));
-}
-
-function inferDayType(text) {
-  if (text.includes('אימון') && (text.includes('בית') || text.includes('בבית'))) return 'בית + אימון';
-  if (text.includes('אימון') && text.includes('עבודה')) return 'עבודה + אימון';
-  if (text.includes('עבודה')) return 'עבודה';
-  if (text.includes('מנוחה')) return 'מנוחה';
-  if (text.includes('חוץ') || text.includes('בחוץ')) return 'חוץ';
-  if (text.includes('אימון')) return 'אימון';
-  return 'כללי';
-}
-
-function showToast(msg) {
-  let toast = document.getElementById('auto-toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'auto-toast';
-    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(72,187,120,0.95);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;z-index:999;transition:opacity .4s;white-space:nowrap;';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.style.opacity = '1';
-  setTimeout(() => toast.style.opacity = '0', 3000);
-}
-
-async function autoDetectAndSave(userMsg, coachReply) {
-  const entry = getTodayEntry();
-
-  // Case 1: Coach replied with a full menu plan → save as planned
-  if (!entry.planned && looksLikePlannedMenu(coachReply)) {
-    entry.dayType = inferDayType(userMsg + ' ' + coachReply);
-    entry.planned = coachReply;
-    saveMenuLog();
-    showToast('📋 תפריט היום נשמר אוטומטית!');
-    return;
-  }
-
-  // Case 2: User confirmed a menu the coach proposed → save previous coach msg as planned
-  if (!entry.planned && looksLikeUserConfirmed(userMsg)) {
-    const prevCoach = chatHistory.filter(m => m.role === 'assistant').slice(-2, -1)[0];
-    if (prevCoach && looksLikePlannedMenu(prevCoach.content)) {
-      entry.dayType = inferDayType(prevCoach.content);
-      entry.planned = prevCoach.content;
-      saveMenuLog();
-      showToast('📋 תפריט נשמר אוטומטית!');
-    }
-    return;
-  }
-
-  // Case 3: User reported what they actually ate
-  if (looksLikeActualReport(userMsg) && userMsg.length > 20) {
-    entry.actual = (entry.actual ? entry.actual + '\n' : '') + userMsg;
-    saveMenuLog();
-    showToast('✅ דיווח בפועל נשמר!');
-  }
-}
-
-// ══════ CHAT ══════
-const messagesEl = document.getElementById('messages');
-const inputEl    = document.getElementById('input');
-const sendBtn    = document.getElementById('send-btn');
-
-function formatText(t) {
-  return t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-}
-
-function dateLabel(ts) {
-  const d = new Date(ts), now = new Date(), diff = now - d;
-  if (diff < 86400000 && now.getDate() === d.getDate()) return 'היום';
-  if (diff < 172800000) return 'אתמול';
-  return d.toLocaleDateString('he-IL', {day:'numeric', month:'long'});
-}
-
-function renderChat() {
-  messagesEl.innerHTML = '';
-  let lastDate = '';
-  chatHistory.forEach(msg => {
-    const label = dateLabel(msg.ts || Date.now());
-    if (label !== lastDate) {
-      const sep = document.createElement('div');
-      sep.className = 'date-sep'; sep.textContent = label;
-      messagesEl.appendChild(sep); lastDate = label;
-    }
-    appendBubble(msg.role, msg.content, false);
+  const fields = ['weight','chest','navel','arm','waist','thigh','seat','fatpct','fold3','fold2','fold1'];
+  const entry = { date: dateStr };
+  let has = false;
+  fields.forEach(f => {
+    const v = parseFloat(document.getElementById('me-'+f).value);
+    if (v) { entry[f] = v; has = true; }
   });
-  if (chatHistory.length === 0 && profile) {
-    appendBubble('assistant', `שלום${profile.name ? ' ' + profile.name : ''}! 💪\n\nאני הקוצ' שלך — **תזונאי ומאמן כושר** אישי.\n\nספר לי על היום שלך ואבנה לך תפריט + תוכנית מותאמת!`, false);
-  }
-  scrollBottom();
-}
+  if (!has) { alert('הכנס לפחות מדד אחד'); return; }
 
-function appendBubble(role, content, animate = true) {
-  const row = document.createElement('div');
-  row.className = `msg-row ${role === 'user' ? 'user' : 'ai'}`;
-  if (!animate) row.style.animation = 'none';
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  bubble.innerHTML = formatText(content);
-  row.appendChild(bubble);
-  messagesEl.appendChild(row);
-  return row;
-}
-
-function showTyping() {
-  const row = document.createElement('div');
-  row.className = 'msg-row ai'; row.id = 'typing-row';
-  row.innerHTML = '<div class="bubble typing"><span></span><span></span><span></span></div>';
-  messagesEl.appendChild(row); scrollBottom(); return row;
-}
-
-function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
-
-async function send(text) {
-  const msg = (text || inputEl.value).trim();
-  if (!msg || loading) return;
-  inputEl.value = ''; autoResize(); setLoading(true);
-  const ts = Date.now();
-  chatHistory.push({ role:'user', content:msg, ts });
-  saveHistory();
-  appendBubble('user', msg);
-  scrollBottom();
-  const typingRow = showTyping();
-
-  try {
-    const apiMessages = chatHistory
-      .filter(m => m.role === 'user' || m.role === 'assistant')
-      .map(m => ({ role:m.role, content:m.content }));
-
-    const res = await fetch('https://coach-proxy.lapushnianeran.workers.dev/', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-5',
-        max_tokens:1000,
-        system: buildSystemPrompt(),
-        messages: apiMessages,
-      }),
-    });
-    const data = await res.json();
-    const reply = data.content?.[0]?.text || `שגיאה: ${JSON.stringify(data.error || data)}`;
-    typingRow.remove();
-    chatHistory.push({ role:'assistant', content:reply, ts:Date.now() });
-    saveHistory();
-    appendBubble('assistant', reply);
-    scrollBottom();
-
-    // ── AUTO DETECT & SAVE MENU ──
-    autoDetectAndSave(msg, reply);
-  } catch {
-    typingRow.remove();
-    appendBubble('assistant', '❌ שגיאה בחיבור. בדוק אינטרנט ונסה שוב.');
-    scrollBottom();
-  } finally { setLoading(false); }
-}
-
-function setLoading(val) {
-  loading = val;
-  if (val) {
-    sendBtn.disabled = true;
-    inputEl.disabled = true;
-    inputEl.style.opacity = '0.5';
-  } else {
-    inputEl.disabled = false;
-    inputEl.style.opacity = '1';
-    inputEl.readOnly = false;
-    sendBtn.disabled = !inputEl.value.trim();
-  }
-}
-
-function autoResize() {
-  inputEl.style.height = 'auto';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
-}
-
-inputEl.addEventListener('input', () => { autoResize(); sendBtn.disabled = loading || !inputEl.value.trim(); });
-inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
-sendBtn.addEventListener('click', () => send());
-
-// ══════ IMAGE UPLOAD ══════
-async function handleImageFile(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const base64 = ev.target.result.split(',')[1];
-    const mimeType = file.type || 'image/jpeg';
-    const caption = inputEl.value.trim() || 'נתח את התמונה הזו בהקשר של הכושר והתזונה שלי.';
-    inputEl.value = ''; autoResize();
-
-    const row = document.createElement('div');
-    row.className = 'msg-row user';
-    row.innerHTML = `<div class="bubble" style="padding:6px"><img src="data:${mimeType};base64,${base64}" style="max-width:100%;border-radius:10px;display:block;margin-bottom:6px" /><span style="font-size:13px">${caption}</span></div>`;
-    messagesEl.appendChild(row);
-    scrollBottom();
-
-    setLoading(true);
-    const typingRow = showTyping();
-
-    try {
-      const res = await fetch('https://coach-proxy.lapushnianeran.workers.dev/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
-          max_tokens: 1000,
-          system: buildSystemPrompt(),
-          messages: [
-            ...chatHistory.filter(m => m.role === 'user' || m.role === 'assistant').slice(-10).map(m => ({ role: m.role, content: m.content })),
-            {
-              role: 'user',
-              content: [
-                { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
-                { type: 'text', text: caption }
-              ]
-            }
-          ]
-        })
-      });
-      const data = await res.json();
-      const reply = data.content?.[0]?.text || 'שגיאה בקבלת תשובה.';
-      typingRow.remove();
-      chatHistory.push({ role: 'user', content: `[תמונה] ${caption}`, ts: Date.now() });
-      chatHistory.push({ role: 'assistant', content: reply, ts: Date.now() });
-      saveHistory();
-      appendBubble('assistant', reply);
-      scrollBottom();
-      autoDetectAndSave(caption, reply);
-    } catch {
-      typingRow.remove();
-      appendBubble('assistant', '❌ שגיאה בשליחת התמונה.');
-      scrollBottom();
-    } finally {
-      setLoading(false);
-    }
-  };
-  reader.readAsDataURL(file);
-}
-
-document.getElementById('gallery-btn').addEventListener('click', () => document.getElementById('img-input-gallery').click());
-document.getElementById('camera-btn').addEventListener('click', () => document.getElementById('img-input-camera').click());
-document.getElementById('img-input-gallery').addEventListener('change', e => { handleImageFile(e.target.files[0]); e.target.value=''; });
-document.getElementById('img-input-camera').addEventListener('change', e => { handleImageFile(e.target.files[0]); e.target.value=''; });
-
-// ══════ END IMAGE UPLOAD ══════
-
-// ══════ TODAY / TOMORROW MENU BUTTONS ══════
-document.getElementById('btn-today-menu').addEventListener('click', async () => {
-  const today = todayStr();
-  const entry = menuLog.find(e => e.date === today);
-
-  let prompt = '';
-  if (entry && entry.planned) {
-    // Build status-aware prompt
-    const actualSoFar = entry.actual ? `\n\nמה שאכלתי עד עכשיו:\n${entry.actual}` : '';
-    prompt = `הצג לי את התפריט המלא של היום (${today}):\n\n${entry.planned}${actualSoFar}\n\nאם יש עדכונים של מה שאכלתי — סמן מה כבר אכלתי ✅ ומה עוד נשאר לי לאכול היום. תציג בצורה ברורה עם שעות וקלוריות.`;
-  } else {
-    // No menu yet — ask to build one
-    prompt = `אין לי עדיין תפריט להיום (${today}). בנה לי תפריט יומי מלא עם חלוקה לשעות, קלוריות וחלבון לכל ארוחה.`;
-  }
-  await send(prompt);
+  measures.push(entry);
+  saveJSON(K_MEASURES, measures);
+  fields.forEach(f => document.getElementById('me-'+f).value = '');
+  document.getElementById('me-date').value = '';
+  renderMeasureHistory();
+  showToast('✅ מדידה נשמרה!');
 });
 
-document.getElementById('btn-tomorrow-menu').addEventListener('click', () => {
-  document.getElementById('tomorrow-overlay').classList.add('show');
-});
-
-async function buildTomorrowMenu(dayType) {
-  document.getElementById('tomorrow-overlay').classList.remove('show');
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toLocaleDateString('he-IL');
-
-  const prompt = `בנה לי תפריט מלא למחר (${tomorrowStr}) — ${dayType}. כלול חלוקה לשעות, קלוריות וחלבון לכל ארוחה. אני אשמור אותו לשימוש מחר.`;
-
-  // Pre-create tomorrow's entry in menuLog
-  let tomorrowEntry = menuLog.find(e => e.date === tomorrowStr);
-  if (!tomorrowEntry) {
-    tomorrowEntry = { date: tomorrowStr, dayType, planned: '', actual: '' };
-    menuLog.push(tomorrowEntry);
+function renderMeasureHistory() {
+  const container = document.getElementById('measure-history');
+  if (measures.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="em-icon">📏</div><div class="em-text">עוד אין מדידות<br>הוסף את הנתונים מהפגישה הראשונה עם קארין</div></div>`;
+    return;
   }
-  tomorrowEntry.dayType = dayType;
-
-  await send(prompt);
+  const LABELS = { weight:'משקל (ק"ג)', chest:'חזה/יד', navel:'טבור', arm:'יד', waist:'מותניים', thigh:'ירך', seat:'ישבן', fatpct:'% שומן', fold3:'קפל גב', fold2:'קפל בטן', fold1:'קפל חזה' };
+  const sorted = [...measures].reverse();
+  container.innerHTML = sorted.map((m, i) => {
+    const fields = Object.entries(LABELS).filter(([k]) => m[k] != null)
+      .map(([k,l]) => `<div class="wi-row"><span>${l}</span><span>${m[k]}${k!=='weight'&&k!=='fatpct'?' ס"מ':(k==='fatpct'?'%':'')}</span></div>`).join('');
+    return `<div class="wi-item">
+      <div class="wi-head" onclick="toggleMe(${i})">
+        <div class="wi-date">${m.date}</div>
+        <div style="font-size:13px;color:var(--gold-soft)">›</div>
+      </div>
+      <div class="wi-body" id="me-body-${i}">${fields}</div>
+    </div>`;
+  }).join('');
 }
 
-// ══════ END TODAY / TOMORROW ══════
-document.getElementById('clear-btn').addEventListener('click', () => document.getElementById('confirm-overlay').classList.add('show'));
-document.getElementById('cancel-clear').addEventListener('click', () => document.getElementById('confirm-overlay').classList.remove('show'));
-document.getElementById('confirm-clear').addEventListener('click', () => {
-  chatHistory = []; localStorage.removeItem(K_HISTORY);
-  document.getElementById('confirm-overlay').classList.remove('show');
-  renderChat();
-});
-
-// ── Service Worker ──
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
-
-// ══════ MENU LOG & HISTORY ══════
-const K_MENULOG = 'coach_menulog_v1';
-let menuLog = [];
-let histCurrentDate = new Date();
-
-function loadMenuLog() {
-  try { menuLog = JSON.parse(localStorage.getItem(K_MENULOG)) || []; } catch { menuLog = []; }
-}
-function saveMenuLog() { localStorage.setItem(K_MENULOG, JSON.stringify(menuLog)); }
-
-function todayStr() { return new Date().toLocaleDateString('he-IL'); }
-
-function dateToStr(d) { return d.toLocaleDateString('he-IL'); }
-
-function getTodayEntry() {
-  const today = todayStr();
-  let entry = menuLog.find(e => e.date === today);
-  if (!entry) { entry = { date: today, dayType: '', planned: '', actual: '' }; menuLog.push(entry); }
-  return entry;
+function toggleMe(idx) {
+  document.getElementById('me-body-'+idx).classList.toggle('open');
 }
 
-function getEntryByDate(dateStr) {
-  return menuLog.find(e => e.date === dateStr) || null;
-}
+// ═══════════════════════════════════════════
+// SERVICE WORKER
+// ═══════════════════════════════════════════
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-function renderMenuLog() {
-  // Update stats
-  document.getElementById('hs-total').textContent    = menuLog.filter(e => e.planned).length;
-  document.getElementById('hs-reported').textContent = menuLog.filter(e => e.actual).length;
-
-  // Days strip — show all days that have data
-  const strip = document.getElementById('hist-days-strip');
-  const daysWithData = [...menuLog].filter(e => e.planned || e.actual).reverse().slice(0, 14);
-  if (daysWithData.length > 0) {
-    strip.innerHTML = daysWithData.map(e => {
-      const isSelected = e.date === dateToStr(histCurrentDate);
-      return `<button onclick="selectHistDate('${e.date}')" style="flex-shrink:0;padding:5px 10px;border-radius:12px;border:1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'};background:${isSelected ? 'rgba(99,179,237,0.2)' : 'rgba(255,255,255,0.04)'};color:${isSelected ? 'var(--accent)' : 'var(--text2)'};font-size:11px;cursor:pointer;font-family:Heebo,sans-serif;">
-        ${e.date}<br><span style="font-size:10px">${e.dayType||''}</span>
-      </button>`;
-    }).join('');
-  } else {
-    strip.innerHTML = '<div style="font-size:12px;color:var(--text2)">עוד אין ימים מתועדים — בנה תפריט בצ\'אט!</div>';
-  }
-
-  renderHistoryForDate(dateToStr(histCurrentDate));
-}
-
-function selectHistDate(dateStr) {
-  const parts = dateStr.split('/');
-  histCurrentDate = new Date(parts[2], parts[1]-1, parts[0]);
-  renderMenuLog();
-}
-
-function renderHistoryForDate(dateStr) {
-  const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-  const d = histCurrentDate;
-  const dayName = days[d.getDay()];
-  document.getElementById('hist-date-display').textContent = `יום ${dayName}, ${dateStr}`;
-
-  const entry = getEntryByDate(dateStr);
-  const plannedCard  = document.getElementById('hist-planned-card');
-  const actualCard   = document.getElementById('hist-actual-card');
-  const analyzeWrap  = document.getElementById('hist-analyze-wrap');
-  const plannedEl    = document.getElementById('hist-planned-content');
-  const actualEl     = document.getElementById('hist-actual-content');
-
-  if (!entry || !entry.planned) {
-    plannedEl.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:16px">אין תפריט מתוכנן לתאריך זה</div>';
-  } else {
-    // Format planned menu nicely
-    plannedEl.innerHTML = entry.planned
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#93c5fd">$1</strong>')
-      .replace(/\n/g, '<br>');
-    if (entry.dayType) {
-      plannedEl.innerHTML = `<div style="margin-bottom:8px"><span style="background:rgba(99,179,237,0.15);color:var(--accent);padding:3px 10px;border-radius:10px;font-size:12px">${entry.dayType}</span></div>` + plannedEl.innerHTML;
-    }
-  }
-
-  if (entry && entry.actual) {
-    actualCard.style.display = 'block';
-    actualEl.innerHTML = entry.actual.replace(/\n/g, '<br>');
-  } else {
-    actualCard.style.display = 'none';
-  }
-
-  analyzeWrap.style.display = (entry && entry.planned && entry.actual) ? 'block' : 'none';
-}
-
-document.getElementById('hist-prev').addEventListener('click', () => {
-  histCurrentDate.setDate(histCurrentDate.getDate() - 1);
-  renderMenuLog();
-});
-document.getElementById('hist-next').addEventListener('click', () => {
-  histCurrentDate.setDate(histCurrentDate.getDate() + 1);
-  renderMenuLog();
-});
-document.getElementById('hist-today').addEventListener('click', () => {
-  histCurrentDate = new Date();
-  renderMenuLog();
-});
-document.getElementById('hist-analyze-btn').addEventListener('click', async () => {
-  const dateStr = dateToStr(histCurrentDate);
-  const entry = getEntryByDate(dateStr);
-  if (!entry) return;
-  const prompt = `ניתוח יום ${dateStr} (${entry.dayType}):\nתכנון:\n${entry.planned}\n\nבפועל:\n${entry.actual}\n\nנתח: האם עמדתי ביעדים? מה היה טוב? מה לשפר? ציון 1-10.`;
-  showScreen('chat');
-  await send(prompt);
-});
-
-// ══════ INIT ══════
-loadAll();
-loadMenuLog();
-if (!profile) {
-  document.getElementById('setup-overlay').classList.add('show');
-} else {
-  updateHeaderSubtitle();
-  updateStatsCard();
-}
-renderChat();
-renderWeighinHistory();
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+updateHeaderDate();
+loadCurrentDay();
 </script>
 </body>
 </html>
