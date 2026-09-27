@@ -430,16 +430,25 @@ function emptyMealSet() {
 
 function getDayEntry(key) {
   if (!days[key]) {
-    days[key] = { method: 'portions', planned: emptyMealSet(), actual: emptyMealSet(), fixedNotes: '' };
+    days[key] = { method: 'portions', planned: emptyMealSet(), actual: emptyMealSet(), fixedNotes: '', actualTouched: false };
   }
   // migrate old format if needed
   if (!days[key].planned) days[key].planned = emptyMealSet();
   if (!days[key].actual) days[key].actual = emptyMealSet();
+  if (typeof days[key].actualTouched !== 'boolean') days[key].actualTouched = false;
   MEALS.forEach(m => {
     if (!days[key].planned[m]) days[key].planned[m] = { protein: [], carb: [], fat: [], veg: [], fruit: [], free: [], outside: [] };
     if (!days[key].actual[m]) days[key].actual[m] = { protein: [], carb: [], fat: [], veg: [], fruit: [], free: [], outside: [] };
   });
   return days[key];
+}
+
+// Mark that the user has personally edited "actual" for this day, so the
+// planned->actual auto-sync stops overwriting their own edits.
+function markActualTouched(entry) {
+  if (currentMode === 'actual' && !entry.actualTouched) {
+    entry.actualTouched = true;
+  }
 }
 
 function getMealData(entry, mode, meal) {
@@ -595,9 +604,10 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     currentMode = btn.dataset.mode;
     resetEditingCustom();
     const entry = getDayEntry(dateKey(currentDate));
-    // First time opening "מה אכלתי בפועל" for this day: start from what was
-    // planned, so the user only has to adjust what actually differed.
-    if (currentMode === 'actual' && !dayHasData(entry, 'actual') && dayHasData(entry, 'planned')) {
+    // Keep "מה אכלתי בפועל" synced to "מה תכננתי" until the user personally
+    // edits "actual" for this day (entry.actualTouched). After that, their
+    // own edits are never overwritten again.
+    if (currentMode === 'actual' && !entry.actualTouched && dayHasData(entry, 'planned')) {
       entry.actual = JSON.parse(JSON.stringify(entry.planned));
       saveJSON(K_DAYS, days);
     }
@@ -841,6 +851,7 @@ function changeQty(catKey, name, delta) {
     if (item.qty <= 0) arr = arr.filter(i => i.name !== name);
   }
   mealData[catKey] = arr;
+  markActualTouched(entry);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -857,6 +868,7 @@ function toggleSimple(catKey, name) {
   if (idx >= 0) arr.splice(idx, 1);
   else arr.push({ name });
   mealData[catKey] = arr;
+  markActualTouched(entry);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -889,6 +901,7 @@ function addCustomItem(catKey) {
     mealData[catKey].push({ id: makeCustomId(), name, qty, custom: true });
   }
   resetEditingCustom();
+  markActualTouched(entry);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -923,6 +936,7 @@ function addCustomSimple(catKey) {
     mealData[catKey].push({ id: makeCustomId(), name, custom: true });
   }
   resetEditingCustom();
+  markActualTouched(entry);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -959,6 +973,7 @@ function addCustomOutside() {
     mealData.outside.push({ id: makeCustomId(), name, protein, carb, fat, custom: true });
   }
   resetEditingCustom();
+  markActualTouched(entry);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -986,6 +1001,7 @@ function removeCustomById(catKey, id) {
   const mealData = entry[currentMode][currentMeal];
   mealData[catKey] = (mealData[catKey] || []).filter(i => i.id !== id);
   if (editingCustom.catKey === catKey && editingCustom.id === id) resetEditingCustom();
+  markActualTouched(entry);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -1001,6 +1017,7 @@ function addVeg() {
   const entry = getDayEntry(dateKey(currentDate));
   const mealData = entry[currentMode][currentMeal];
   mealData.veg.push({ name: val });
+  markActualTouched(entry);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -1013,6 +1030,7 @@ function removeVeg(idx) {
   const entry = getDayEntry(dateKey(currentDate));
   const mealData = entry[currentMode][currentMeal];
   mealData.veg.splice(idx, 1);
+  markActualTouched(entry);
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
