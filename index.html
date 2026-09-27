@@ -73,7 +73,9 @@ header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(1
 .custom-item-row{display:flex;align-items:center;justify-content:space-between;padding:9px 8px;border-bottom:1px solid rgba(255,255,255,0.04);gap:8px;}
 .custom-item-row .ci-name{font-size:13px;flex:1;}
 .custom-item-row .ci-meta{font-size:10.5px;color:var(--text2);margin-top:2px;}
-.custom-item-row button{background:none;border:none;color:#c1666b;font-size:16px;cursor:pointer;flex-shrink:0;}
+.custom-item-row > div:last-child{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.custom-item-row button{background:none;border:none;font-size:15px;cursor:pointer;flex-shrink:0;padding:2px;}
+.custom-item-row button:last-child{color:#c1666b;font-size:16px;}
 
 /* ── METHOD SWITCH ── */
 .method-switch{display:flex;background:var(--bg2);border-radius:12px;padding:3px;margin-bottom:12px;border:1px solid var(--line);}
@@ -591,6 +593,7 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
+    resetEditingCustom();
     const entry = getDayEntry(dateKey(currentDate));
     // First time opening "מה אכלתי בפועל" for this day: start from what was
     // planned, so the user only has to adjust what actually differed.
@@ -649,6 +652,7 @@ function renderMealTabs(entry) {
 
 function selectMeal(meal) {
   currentMeal = meal;
+  if (typeof resetEditingCustom === 'function') resetEditingCustom();
   const entry = getDayEntry(dateKey(currentDate));
   renderMealTabs(entry);
   renderCategories(entry);
@@ -720,17 +724,20 @@ function renderCatItems(catKey, mealData) {
       </div>`;
     }).join('');
     const customList = selected.filter(s => s.custom);
-    const customHtml = customList.length ? `<div class="section-label">מה שהוספת בעצמך</div>` + customList.map(it => `
+    const customHtml = customList.length ? `<div class="section-label">✏️ מה שהוספת בעצמך</div>` + customList.map(it => `
       <div class="custom-item-row">
         <div class="ci-name">${it.name}</div>
-        <button onclick="removeCustomById('${catKey}','${it.id}')">✕</button>
+        <div>
+          <button onclick="editCustomSimple('${catKey}','${it.id}')">✏️</button>
+          <button onclick="removeCustomById('${catKey}','${it.id}')">✕</button>
+        </div>
       </div>`).join('') : '';
     const addForm = `<div class="section-label">הוספת פריט שלא ברשימה</div>
       <div class="custom-add-row">
         <input type="text" id="custom-name-${catKey}" placeholder="${catKey==='fruit'?'פרי אחר...':'פריט אחר...'}" />
-        <button class="custom-add-btn" onclick="addCustomSimple('${catKey}')">הוסף</button>
+        <button class="custom-add-btn" id="custom-add-btn-${catKey}" onclick="addCustomSimple('${catKey}')">הוסף</button>
       </div>`;
-    return hint + listHtml + customHtml + addForm;
+    return hint + customHtml + addForm + `<div class="section-label">מהרשימה</div>` + listHtml;
   }
 
   if (catKey === 'outside') {
@@ -747,14 +754,17 @@ function renderCatItems(catKey, mealData) {
       </div>`;
     }).join('');
     const customList = selected.filter(s => s.custom);
-    const customHtml = customList.length ? `<div class="section-label">מה שהוספת בעצמך</div>` + customList.map(it => {
+    const customHtml = customList.length ? `<div class="section-label">✏️ מה שהוספת בעצמך</div>` + customList.map(it => {
       const parts = [];
       if (it.protein) parts.push(fmtNum(it.protein) + ' חלבון');
       if (it.carb) parts.push(fmtNum(it.carb) + ' פחמימה');
       if (it.fat) parts.push(fmtNum(it.fat) + ' שומן');
       return `<div class="custom-item-row">
         <div><div class="ci-name">${it.name}</div><div class="ci-meta">${parts.join(' + ') || 'ללא ערך'}</div></div>
-        <button onclick="removeCustomById('outside','${it.id}')">✕</button>
+        <div>
+          <button onclick="editCustomOutside('${it.id}')">✏️</button>
+          <button onclick="removeCustomById('outside','${it.id}')">✕</button>
+        </div>
       </div>`;
     }).join('') : '';
     const addForm = `<div class="section-label">הוספת מנה שלא ברשימה (בכמה מנות היא שווה)</div>
@@ -765,9 +775,9 @@ function renderCatItems(catKey, mealData) {
         <input type="number" step="0.5" min="0" id="custom-protein-outside" placeholder="חלבון" />
         <input type="number" step="0.5" min="0" id="custom-carb-outside" placeholder="פחמימה" />
         <input type="number" step="0.5" min="0" id="custom-fat-outside" placeholder="שומן" />
-        <button class="custom-add-btn" onclick="addCustomOutside()">הוסף</button>
+        <button class="custom-add-btn" id="custom-add-btn-outside" onclick="addCustomOutside()">הוסף</button>
       </div>`;
-    return listHtml + customHtml + addForm;
+    return customHtml + addForm + `<div class="section-label">מהרשימה</div>` + listHtml;
   }
 
   // protein / carb / fat — grouped by heading (matching Karin's document), quantity based
@@ -793,19 +803,22 @@ function renderCatItems(catKey, mealData) {
   }).join('');
 
   const customList = selected.filter(s => s.custom);
-  const customHtml = customList.length ? `<div class="section-label">מה שהוספת בעצמך</div>` + customList.map(it => `
+  const customHtml = customList.length ? `<div class="section-label">✏️ מה שהוספת בעצמך</div>` + customList.map(it => `
     <div class="custom-item-row">
       <div><div class="ci-name">${it.name}</div><div class="ci-meta">${fmtNum(it.qty)} מנות ${FOOD_DB[catKey].label}</div></div>
-      <button onclick="removeCustomById('${catKey}','${it.id}')">✕</button>
+      <div>
+        <button onclick="editCustomItem('${catKey}','${it.id}')">✏️</button>
+        <button onclick="removeCustomById('${catKey}','${it.id}')">✕</button>
+      </div>
     </div>`).join('') : '';
   const addForm = `<div class="section-label">הוספת מנה שלא ברשימה</div>
     <div class="custom-add-row">
       <input type="text" id="custom-name-${catKey}" placeholder="שם המנה..." />
       <input type="number" step="0.5" min="0.5" id="custom-qty-${catKey}" placeholder="כמות" />
-      <button class="custom-add-btn" onclick="addCustomItem('${catKey}')">הוסף</button>
+      <button class="custom-add-btn" id="custom-add-btn-${catKey}" onclick="addCustomItem('${catKey}')">הוסף</button>
     </div>`;
 
-  return groupsHtml + customHtml + addForm;
+  return customHtml + addForm + `<div class="section-label">מהרשימה</div>` + groupsHtml;
 }
 
 function toggleCat(catKey) {
@@ -854,6 +867,12 @@ function toggleSimple(catKey, name) {
 
 function makeCustomId() { return 'c' + Date.now() + Math.floor(Math.random() * 1000); }
 
+// Tracks an in-progress edit of a custom item, so the add-form can double as
+// an edit form: { catKey, id } of the item being edited, or nulls when adding new.
+let editingCustom = { catKey: null, id: null };
+
+function resetEditingCustom() { editingCustom = { catKey: null, id: null }; }
+
 // Custom item with a stated portion value — for protein/carb/fat categories
 function addCustomItem(catKey) {
   const nameInput = document.getElementById('custom-name-' + catKey);
@@ -863,13 +882,31 @@ function addCustomItem(catKey) {
   if (!name || !qty || qty <= 0) { alert('נא למלא שם ומספר מנות תקין'); return; }
   const entry = getDayEntry(dateKey(currentDate));
   const mealData = entry[currentMode][currentMeal];
-  mealData[catKey].push({ id: makeCustomId(), name, qty, custom: true });
+  if (editingCustom.catKey === catKey && editingCustom.id) {
+    const item = mealData[catKey].find(i => i.id === editingCustom.id);
+    if (item) { item.name = name; item.qty = qty; }
+  } else {
+    mealData[catKey].push({ id: makeCustomId(), name, qty, custom: true });
+  }
+  resetEditingCustom();
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
   renderCategories(entry);
   reopenCat(catKey);
   renderDaySummary(entry);
+}
+
+function editCustomItem(catKey, id) {
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  const item = (mealData[catKey] || []).find(i => i.id === id);
+  if (!item) return;
+  editingCustom = { catKey, id };
+  document.getElementById('custom-name-' + catKey).value = item.name;
+  document.getElementById('custom-qty-' + catKey).value = item.qty;
+  const btn = document.getElementById('custom-add-btn-' + catKey);
+  if (btn) btn.textContent = '✔ עדכן';
 }
 
 // Simple named custom item (no portion value needed) — for fruit / free basket
@@ -879,13 +916,30 @@ function addCustomSimple(catKey) {
   if (!name) { alert('נא למלא שם'); return; }
   const entry = getDayEntry(dateKey(currentDate));
   const mealData = entry[currentMode][currentMeal];
-  mealData[catKey].push({ id: makeCustomId(), name, custom: true });
+  if (editingCustom.catKey === catKey && editingCustom.id) {
+    const item = mealData[catKey].find(i => i.id === editingCustom.id);
+    if (item) item.name = name;
+  } else {
+    mealData[catKey].push({ id: makeCustomId(), name, custom: true });
+  }
+  resetEditingCustom();
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
   renderCategories(entry);
   reopenCat(catKey);
   renderDaySummary(entry);
+}
+
+function editCustomSimple(catKey, id) {
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  const item = (mealData[catKey] || []).find(i => i.id === id);
+  if (!item) return;
+  editingCustom = { catKey, id };
+  document.getElementById('custom-name-' + catKey).value = item.name;
+  const btn = document.getElementById('custom-add-btn-' + catKey);
+  if (btn) btn.textContent = '✔ עדכן';
 }
 
 // Custom eating-out item with its own protein/carb/fat portion equivalents
@@ -898,7 +952,13 @@ function addCustomOutside() {
   if (!protein && !carb && !fat) { alert('נא למלא ערך במנות עבור לפחות אחת מהקטגוריות'); return; }
   const entry = getDayEntry(dateKey(currentDate));
   const mealData = entry[currentMode][currentMeal];
-  mealData.outside.push({ id: makeCustomId(), name, protein, carb, fat, custom: true });
+  if (editingCustom.catKey === 'outside' && editingCustom.id) {
+    const item = mealData.outside.find(i => i.id === editingCustom.id);
+    if (item) { item.name = name; item.protein = protein; item.carb = carb; item.fat = fat; }
+  } else {
+    mealData.outside.push({ id: makeCustomId(), name, protein, carb, fat, custom: true });
+  }
+  resetEditingCustom();
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
@@ -907,10 +967,25 @@ function addCustomOutside() {
   renderDaySummary(entry);
 }
 
+function editCustomOutside(id) {
+  const entry = getDayEntry(dateKey(currentDate));
+  const mealData = entry[currentMode][currentMeal];
+  const item = (mealData.outside || []).find(i => i.id === id);
+  if (!item) return;
+  editingCustom = { catKey: 'outside', id };
+  document.getElementById('custom-name-outside').value = item.name;
+  document.getElementById('custom-protein-outside').value = item.protein || '';
+  document.getElementById('custom-carb-outside').value = item.carb || '';
+  document.getElementById('custom-fat-outside').value = item.fat || '';
+  const btn = document.getElementById('custom-add-btn-outside');
+  if (btn) btn.textContent = '✔ עדכן';
+}
+
 function removeCustomById(catKey, id) {
   const entry = getDayEntry(dateKey(currentDate));
   const mealData = entry[currentMode][currentMeal];
   mealData[catKey] = (mealData[catKey] || []).filter(i => i.id !== id);
+  if (editingCustom.catKey === catKey && editingCustom.id === id) resetEditingCustom();
   saveJSON(K_DAYS, days);
   renderTargets(entry);
   renderMealTabs(entry);
