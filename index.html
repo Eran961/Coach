@@ -505,6 +505,7 @@ function computeMacroTotals(entry, mode) {
       });
     });
     (md.fruit || []).forEach(() => { totals.carb += (FOOD_DB.fruit.carbEq || 0.5); });
+    (md.free || []).forEach(() => { totals.carb += (FOOD_DB.free.carbEq || 0.5); });
     (md.outside || []).forEach(sel => {
       if (sel.custom) {
         totals.protein += sel.protein || 0;
@@ -724,6 +725,7 @@ function renderCatItems(catKey, mealData) {
     const selected = mealData[catKey] || [];
     let hint = '';
     if (catKey === 'fruit') hint = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">כל פרי = חצי מנת פחמימה, נספר אוטומטית בסך היום</div>`;
+    if (catKey === 'free') hint = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">כל פריט מהסל החופשי = חצי מנת פחמימה, נספר אוטומטית בסך היום</div>`;
     const listHtml = items.map(it => {
       const name = typeof it === 'string' ? it : it.name;
       const note = typeof it === 'object' ? it.note : null;

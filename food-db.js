@@ -161,8 +161,9 @@ const FOOD_DB = {
     ]
   },
 
+  // Each free-basket item = half a carb portion (counted automatically, like fruit)
   free: {
-    label: 'סל יומי חופשי — חצי מנת פחמימה', icon: '🍬', color: '#ba68c8',
+    label: 'סל יומי חופשי (=חצי מנת פחמימה)', icon: '🍬', color: '#ba68c8', carbEq: 0.5,
     items: [
       "פררו רושה", "2 אוראו", "אצבע קינדר", "3 מיני בואנו",
       "שורת שוקולד פרה", "שורת שוקולד מילקה",
