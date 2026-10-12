@@ -95,7 +95,7 @@ header{padding:calc(var(--safe-t) + 16px) 18px 14px;background:linear-gradient(1
 .meal-tab .mt-count{font-size:9px;opacity:.75;margin-right:3px;}
 
 /* ── PROGRESS RINGS ── */
-.targets-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px;}
+.targets-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px;}
 .target-box{background:var(--bg2);border-radius:12px;padding:10px 4px;text-align:center;border:1px solid var(--line);}
 .target-box .tv{font-size:17px;font-weight:800;}
 .target-box .tl{font-size:10px;color:var(--text2);margin-top:1px;}
@@ -286,6 +286,10 @@ textarea.plain::placeholder{color:#5a5648;}
   <div id="weighin-view" class="view">
     <div class="card">
       <h3>⚖️ שקילה חדשה</h3>
+      <div class="input-field" style="margin-bottom:10px">
+        <label>תאריך השקילה</label>
+        <input type="date" id="wi-date" />
+      </div>
       <div class="big-num-input">
         <input type="number" step="0.1" id="wi-weight" placeholder="0.0" inputmode="decimal" />
         <span class="unit">ק"ג</span>
@@ -638,11 +642,6 @@ function renderTargets(entry) {
   row.innerHTML += `<div class="target-box ${vegCount>=5?'done':''}">
     <div class="tv" style="color:#5f9c7a">${vegCount}</div>
     <div class="tl">🥦 ירקות</div>
-  </div>`;
-  const freeCount = sumCategory(entry, currentMode, 'free').length;
-  row.innerHTML += `<div class="target-box ${freeCount>0?'done':''}">
-    <div class="tv" style="color:#ba68c8">${freeCount}</div>
-    <div class="tl">🍬 חופשי</div>
   </div>`;
 }
 
@@ -1246,12 +1245,38 @@ function showDayDetail(key) {
 // ═══════════════════════════════════════════
 // WEIGH-IN
 // ═══════════════════════════════════════════
+// Formats a Date as YYYY-MM-DD for an <input type="date"> value, in local time.
+function toDateInputValue(d) {
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+// Keeps the weigh-in date field pre-filled with today's date so entering a
+// weigh-in normally requires no extra step; the user can still pick an
+// earlier date to log a weigh-in retroactively.
+function resetWiDateToToday() {
+  const el = document.getElementById('wi-date');
+  if (el) el.value = toDateInputValue(new Date());
+}
+resetWiDateToToday();
+
 document.getElementById('wi-save-btn').addEventListener('click', () => {
   const weight = parseFloat(document.getElementById('wi-weight').value);
   if (!weight || weight < 30 || weight > 300) { alert('הכנס משקל תקין'); return; }
 
+  // Build the entry's date from the chosen day at local noon, so the
+  // calendar date is preserved correctly regardless of timezone.
+  const dateVal = document.getElementById('wi-date').value;
+  let entryDate;
+  if (dateVal) {
+    const [y, m, d] = dateVal.split('-').map(Number);
+    entryDate = new Date(y, m - 1, d, 12, 0, 0);
+  } else {
+    entryDate = new Date();
+  }
+
   const entry = {
-    date: new Date().toISOString(),
+    date: entryDate.toISOString(),
     weight,
     fat: parseFloat(document.getElementById('wi-fat').value) || null,
     muscle: parseFloat(document.getElementById('wi-muscle').value) || null,
@@ -1264,6 +1289,7 @@ document.getElementById('wi-save-btn').addEventListener('click', () => {
   saveJSON(K_WEIGHINS, weighins);
 
   ['wi-weight','wi-fat','wi-muscle','wi-bmi','wi-bmr','wi-visceral','wi-water'].forEach(id => document.getElementById(id).value = '');
+  resetWiDateToToday();
   renderWeighinHistory();
   renderWeekSummary();
   showToast('✅ שקילה נשמרה!');
