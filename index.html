@@ -493,11 +493,15 @@ function computeMacroTotals(entry, mode) {
     ['protein','carb','fat'].forEach(cat => {
       (md[cat] || []).forEach(sel => {
         const qty = sel.qty || 1;
-        totals[cat] += qty;
-        if (cat === 'protein') {
-          const def = findFoodDefByName('protein', sel.name);
-          if (def && def.fatBonus) totals.fat += def.fatBonus * qty;
-        }
+        // Catalog items are normally worth exactly 1 portion of their own
+        // category per unit, but a few (e.g. "1.5 מנות פחמימה — פיתה...")
+        // are worth more than one portion on their own — def.value carries
+        // that multiplier (default 1). Custom items are always worth their
+        // stated qty, with no catalog def to look up.
+        const def = sel.custom ? null : findFoodDefByName(cat, sel.name);
+        const value = (def && def.value) || 1;
+        totals[cat] += qty * value;
+        if (cat === 'protein' && def && def.fatBonus) totals.fat += def.fatBonus * qty;
       });
     });
     (md.fruit || []).forEach(() => { totals.carb += (FOOD_DB.fruit.carbEq || 0.5); });
@@ -800,6 +804,7 @@ function renderCatItems(catKey, mealData) {
         <div>
           <div class="food-name">${it.name}</div>
           ${it.note ? `<div style="font-size:10.5px;color:var(--text2);margin-top:2px">${it.note}</div>` : ''}
+          ${it.value && it.value !== 1 ? `<div style="font-size:10.5px;color:var(--text2);margin-top:2px">כל יחידה = ${fmtNum(it.value)} מנות</div>` : ''}
         </div>
         <div class="fi-controls">
           <button class="qty-btn" onclick="changeQty('${catKey}','${it.name.replace(/'/g,"\\'")}',-1)">−</button>
